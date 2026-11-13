@@ -1,12 +1,13 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f2a21">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://vzukefbkvkkvkfijuduu.supabase.co; img-src 'self' data: blob: https://server.arcgisonline.com https://services.arcgisonline.com https://vzukefbkvkkvkfijuduu.supabase.co https://drive.google.com https://*.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Árvores | Usiminas Ipatinga</title>
 <link rel="icon" href="icone.svg" type="image/svg+xml">
-<link rel="stylesheet" href="libs/leaflet.css"><link rel="stylesheet" href="mapa/style.css?v=11">
-<script src="config.js"></script><script src="libs/leaflet.js" defer></script><script src="mapa/data.js?v=11" defer></script><script src="mapa/app.js?v=11" defer></script>
+<link rel="stylesheet" href="libs/leaflet.css"><link rel="stylesheet" href="mapa/style.css?v=12">
+<script src="config.js?v=12"></script><script src="libs/leaflet.js" defer></script><script src="mapa/data.js?v=12" defer></script><script src="mapa/app.js?v=12" defer></script><script src="mapa/painel.js?v=12" defer></script>
 </head>
 <body>
 <header class="bar">
@@ -14,11 +15,15 @@
   <i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.03V6a3 3 0 1 1 6 0v.04a3.5 3.5 0 0 1 3.24 5.65A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/><path d="M12 15.5l-2-1.6M12 14l2.2-1.8"/></svg></i>
   <span>Avaliação de Árvores<small>Usiminas · Ipatinga</small></span>
  </a>
+ <nav class="nav" aria-label="Telas">
+  <a href="./" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span>Mapa</span></a>
+  <a href="dashboard/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Dashboard</span></a>
+ </nav>
  <span class="status" id="status" role="status">Carregando…</span>
- <a class="cta" href="avaliar/?nova=1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nova avaliação</a>
+ <a class="cta" href="avaliar/?nova=1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="cta-l">Nova avaliação</span><span class="cta-s">Avaliar</span></a>
 </header>
 
-<main class="main">
+<main class="main" id="main">
  <section class="mapWrap" aria-label="Mapa">
   <div id="map"></div>
   <div class="filtro">
@@ -28,44 +33,43 @@
    </button>
    <div class="pop" id="filterPop" hidden></div>
   </div>
+  <button type="button" class="abrirPainel" id="expandBtn" hidden aria-label="Abrir painel lateral"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Painel</button>
   <div class="legend" aria-hidden="true"><span><i class="dot r4"></i>R4 Crítica</span><span><i class="dot r3"></i>R3 Alta</span><span><i class="dot r2"></i>R2 Moderada</span><span><i class="dot r1"></i>R1 Baixa</span></div>
-  <div class="gate" id="gate" hidden><div><h2 id="gateTitle">Entrar para ver o mapa</h2><p id="gateText">O mapa mostra o histórico das inspeções e é restrito à equipe autorizada.</p><a class="cta" id="gateLink" href="/signin-with-chatgpt?return_to=%2F">Entrar</a></div></div>
+  <div class="gate" id="gate" hidden><div><h2 id="gateTitle">Entrar para ver o mapa</h2><p id="gateText">O mapa mostra o histórico das inspeções.</p><a class="cta" id="gateLink" href="./">Recarregar</a></div></div>
  </section>
 
- <aside class="side" aria-label="Painel lateral">
-  <div id="sel" class="ficha" hidden></div>
-  <div class="tabs" id="tabsBar" role="tablist" aria-label="Painel">
-   <button type="button" role="tab" id="t-painel" aria-controls="p-painel" aria-selected="true">Gráficos</button>
-   <button type="button" role="tab" id="t-registros" aria-controls="p-registros" aria-selected="false">Registros <b id="regCount">0</b></button>
-   <button type="button" role="tab" id="t-filtros" aria-controls="p-filtros" aria-selected="false">Filtros</button>
-  </div>
-
-  <div class="tabpanel" id="p-painel" role="tabpanel" aria-labelledby="t-painel">
-   <div class="bloco">
-    <div class="eyebrow">Árvores no mapa</div>
-    <div class="total"><b id="total">0</b><span id="totalSub">no filtro atual</span></div>
-    <div class="stack" id="stack" aria-hidden="true"></div>
-    <div class="leg" id="leg"></div>
+ <aside class="side" id="side" aria-label="Painel lateral">
+  <div class="resizer" id="resizer" title="Arraste para alargar ou estreitar" aria-hidden="true"></div>
+  <div class="sheet-handle" id="sheetHandle" aria-hidden="true"><span></span></div>
+  <div class="side-top">
+   <div class="tabs" id="tabsBar" role="tablist" aria-label="Painel">
+    <button type="button" role="tab" id="t-prioridades" aria-controls="p-prioridades" aria-selected="true">Prioridades <b id="prioCount">0</b></button>
+    <button type="button" role="tab" id="t-registros" aria-controls="p-registros" aria-selected="false">Registros <b id="regCount">0</b></button>
+    <button type="button" role="tab" id="t-filtros" aria-controls="p-filtros" aria-selected="false">Filtros</button>
    </div>
-   <div class="minis">
-    <div class="mini"><span>R3 + R4</span><b id="n34">0</b></div>
-    <div class="mini"><span>Sem coordenadas</span><b id="nMissing">0</b></div>
+   <button type="button" class="recolher" id="collapseBtn" title="Recolher o painel" aria-label="Recolher o painel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+  </div>
+  <div class="side-body">
+   <div id="sel" class="ficha" hidden></div>
+
+   <div class="tabpanel" id="p-prioridades" role="tabpanel" aria-labelledby="t-prioridades">
+    <p class="dica">Árvores R4 e R3 no filtro atual, da mais grave para a mais recente.</p>
+    <ul class="lista" id="attention"></ul>
+    <p class="vazio" id="attentionEmpty" hidden>Nenhuma árvore R3 ou R4 neste filtro.</p>
+    <a class="ver-dash" href="dashboard/">Ver gráficos no Dashboard →</a>
    </div>
-   <div class="bloco"><h3>Inspeções por mês</h3><div class="cols" id="months"></div></div>
-   <div class="bloco"><h3>Áreas com mais R3 e R4</h3><ul class="hbars" id="areasChart"></ul><p class="vazio" id="areasEmpty" hidden>Nenhuma árvore R3 ou R4 neste filtro.</p></div>
-   <div class="bloco"><h3>Atenção primeiro</h3><ul class="lista" id="attention"></ul><p class="vazio" id="attentionEmpty" hidden>Nenhuma árvore R3 ou R4 neste filtro.</p></div>
-  </div>
 
-  <div class="tabpanel" id="p-registros" role="tabpanel" aria-labelledby="t-registros" hidden>
-   <label class="busca"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="search" type="search" placeholder="Buscar árvore, área, componente…" autocomplete="off"></label>
-   <ul class="lista regs" id="records"></ul>
-   <button type="button" class="ghost mais" id="moreRecords" hidden>Mostrar mais</button>
-   <p class="vazio" id="recordsEmpty" hidden>Nenhum registro neste filtro.</p>
-  </div>
+   <div class="tabpanel" id="p-registros" role="tabpanel" aria-labelledby="t-registros" hidden>
+    <label class="busca"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="search" type="search" placeholder="Buscar árvore, área, componente…" autocomplete="off"></label>
+    <ul class="lista regs" id="records"></ul>
+    <button type="button" class="ghost mais" id="moreRecords" hidden>Mostrar mais</button>
+    <p class="vazio" id="recordsEmpty" hidden>Nenhum registro neste filtro.</p>
+   </div>
 
-  <div class="tabpanel" id="p-filtros" role="tabpanel" aria-labelledby="t-filtros" hidden>
-   <div id="filterTab"></div>
-   <details class="sem" id="missingBox" hidden><summary>Registros sem coordenadas</summary><ul id="missing"></ul></details>
+   <div class="tabpanel" id="p-filtros" role="tabpanel" aria-labelledby="t-filtros" hidden>
+    <div id="filterTab"></div>
+    <details class="sem" id="missingBox" hidden><summary>Registros sem coordenadas (<span id="nMissing">0</span>)</summary><ul id="missing"></ul></details>
+   </div>
   </div>
  </aside>
 </main>

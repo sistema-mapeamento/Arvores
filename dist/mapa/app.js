@@ -153,8 +153,8 @@
  }
 
  // ---------- abas ----------
- const tabs = ['painel', 'registros', 'filtros'];
- let abaAtual = 'painel';
+ const tabs = ['prioridades', 'registros', 'filtros'];
+ let abaAtual = 'prioridades';
  function showTab(t) {
   abaAtual = t;
   const ficha = !!state.sel;
@@ -188,22 +188,14 @@
   }
   if (state.first && pts.length) { map.fitBounds(L.latLngBounds(pts.map(p => [p.geo.lat, p.geo.lon])), { padding: [60, 60], maxZoom: 16 }); state.first = false; }
 
-  // aba Gráficos
-  const vis = [4, 3, 2, 1].filter(r => !state.risks || state.risks.has(r));
-  $('total').textContent = pts.length;
-  $('totalSub').textContent = state.area ? 'em ' + state.area : 'no filtro atual';
-  $('stack').replaceChildren(...vis.filter(r => n[r]).map(r => { const i = el('i', { class: 'r' + r + '-bg', title: 'R' + r + ' ' + NOMES[r] + ': ' + n[r] }); i.style.flex = String(n[r]); return i; }));
-  $('leg').replaceChildren(...[4, 3, 2, 1].map(r => el('div', {}, el('b', {}, vis.includes(r) ? String(n[r]) : '–'), el('span', {}, el('i', { class: 'dot r' + r }), 'R' + r + ' ' + NOMES[r]))));
-  $('n34').textContent = (vis.includes(3) ? n[3] : 0) + (vis.includes(4) ? n[4] : 0);
   $('nMissing').textContent = missing.length;
 
   const regs = v.scoped.filter(r => byArea(r) && byRisk(r)).sort((a, b) => (b.stamp || '').localeCompare(a.stamp || ''));
-  months(regs);
-  areasChart(pts);
-  const crit = pts.filter(p => p.risk >= 3).sort((a, b) => b.risk - a.risk || (b.stamp || '').localeCompare(a.stamp || '')).slice(0, 8);
+  const crit = pts.filter(p => p.risk >= 3).sort((a, b) => b.risk - a.risk || (b.stamp || '').localeCompare(a.stamp || '')).slice(0, 40);
   $('attention').replaceChildren(...crit.map(p => el('li', {}, el('button', { type: 'button', on: () => select(p, true) },
    (() => { const f = fotosDe(p.tree)[0]; return f ? thumb(f.url) : el('span', { class: 'th vazio-th' }); })(), el('span', { class: 'txt' }, el('strong', {}, p.id), el('small', {}, (p.area || '—') + ' · ' + dataBR(p.stamp))), riskTag(p.risk)))));
   $('attentionEmpty').hidden = crit.length > 0;
+  $('prioCount').textContent = pts.filter(p => p.risk >= 3).length;
 
   // aba Registros
   const q = norm(state.q);
@@ -223,40 +215,6 @@
   $('missing').replaceChildren(...missing.slice(0, 50).map(r => el('li', {}, r.id + ' · ' + (r.target || '—') + ' · ' + dataBR(r.stamp))));
 
   if (state.sel) { const p = all.find(x => x.tree === state.sel); if (p) ficha(p); else closeSel(); }
- }
-
- function months(regs) {
-  const hoje = new Date(), qtd = state.period === '30' ? 3 : state.period === '90' ? 4 : 12;
-  const lista = [];
-  for (let i = qtd - 1; i >= 0; i--) { const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1); lista.push([d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), MES[d.getMonth()]]); }
-  const cont = new Map(lista.map(([k]) => [k, 0]));
-  for (const r of regs) { const k = (r.stamp || '').slice(0, 7); if (cont.has(k)) cont.set(k, cont.get(k) + 1); }
-  const max = Math.max(1, ...cont.values());
-  $('months').replaceChildren(...lista.map(([k, nome]) => {
-   const n = cont.get(k), bar = el('i', { title: nome + ': ' + n + ' inspeções' });
-   bar.style.height = (n / max * 100) + '%';
-   return el('div', { class: 'c' }, el('em', {}, n ? String(n) : ''), bar);
-  }));
-  let lbl = $('months').nextElementSibling;
-  if (!lbl || !lbl.classList.contains('monthlbl')) { lbl = el('div', { class: 'monthlbl' }); $('months').after(lbl); }
-  lbl.replaceChildren(...lista.map(([, nome]) => el('span', {}, nome)));
- }
-
- function areasChart(pts) {
-  const cont = new Map();
-  for (const p of pts) if (p.risk >= 3) { const c = cont.get(p.area) || { 3: 0, 4: 0 }; c[p.risk]++; cont.set(p.area, c); }
-  const top = [...cont.entries()].sort((a, b) => (b[1][3] + b[1][4]) - (a[1][3] + a[1][4]) || a[0].localeCompare(b[0])).slice(0, 6);
-  const max = Math.max(1, ...top.map(([, c]) => c[3] + c[4]));
-  $('areasChart').replaceChildren(...top.map(([nome, c]) => {
-   const bar = el('span');
-   for (const r of [4, 3]) if (c[r]) { const i = el('i', { class: 'r' + r + '-bg', title: 'R' + r + ': ' + c[r] }); i.style.width = (c[r] / max * 100) + '%'; i.style.minWidth = '6px'; bar.append(i); }
-   bar.style.width = ((c[3] + c[4]) / max * 80) + '%';
-   const li = el('li', { title: nome + ': ' + c[4] + ' R4 e ' + c[3] + ' R3' }, el('span', {}, nome), el('span', { class: 't' }, bar, el('b', {}, String(c[3] + c[4]))));
-   li.addEventListener('click', () => { state.area = nome; render(); });
-   li.style.cursor = 'pointer';
-   return li;
-  }));
-  $('areasEmpty').hidden = top.length > 0;
  }
 
  function galeria(tree) {
@@ -285,6 +243,7 @@
  function select(p, fly) {
   state.sel = p.tree;
   $('filterPop').hidden = true; $('filterBtn').setAttribute('aria-expanded', 'false');
+  window.dispatchEvent(new CustomEvent('arvore-aberta'));
   if (fly) map.flyTo([p.geo.lat, p.geo.lon], Math.max(map.getZoom(), 17), { duration: .6 });
   render();
  }
@@ -303,6 +262,10 @@
   showTab(abaAtual);
  }
 
+
+ // modo exemplo continua ao trocar de tela
+ if (new URLSearchParams(location.search).has('exemplo')) for (const a of document.querySelectorAll('.nav a, .logo')) { const h = a.getAttribute('href'); if (h && !h.includes('?')) a.setAttribute('href', h + '?exemplo'); }
+ window.TreeMapaRef = map;
  loadFences().catch(e => { if (e.status === 401 || e.status === 403) gate(e.status); }).finally(loadHistory);
  setInterval(() => { if (!document.hidden && $('gate').hidden) loadHistory(); }, 5 * 60 * 1000);
 })();

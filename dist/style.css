@@ -101,3 +101,58 @@ main.wrap{max-width:none!important;padding:0 24px!important}
 .photo-previews li a{display:block;font-size:0;color:transparent;text-decoration:none}
 .photo-previews li img{display:block;width:100%;height:110px;object-fit:cover}
 .photo-previews li button{margin:0;border:0;border-top:1px solid var(--line);border-radius:0;padding:7px;font-size:12px;background:#fff;color:#a8243a;font-weight:600}
+
+/* ---- 12/11/2026 (4): leitura das cores de risco + celular confortável para registrar ---- */
+.result-top.r1,.result-top.r3,.result-top.r4,.legend span.r1,.legend span.r3,.legend span.r4,.risk-tag.r1,.risk-tag.r3,.risk-tag.r4{color:#fff!important}
+.result-top.r2,.legend span.r2,.risk-tag.r2{color:#2b2200!important}
+.result-top.r1 .eyebrow,.result-top.r3 .eyebrow,.result-top.r4 .eyebrow{opacity:.85}
+.acta .cta-s{display:none}
+@media (max-width:768px){
+ html{-webkit-text-size-adjust:100%}
+ body{padding-bottom:env(safe-area-inset-bottom,0px)}
+ .abar{position:sticky;top:0;z-index:60;min-height:56px;padding:0 10px 0 12px;gap:8px;margin-bottom:0}
+ .alogo{font-size:14px}.alogo i{width:32px;height:32px}.alogo small{display:none}
+ .anav{display:flex!important;margin-left:auto}.anav a{padding:9px 10px;font-size:13px}
+ .acta{margin-left:0;padding:10px 12px;font-size:14px}
+ main.wrap{padding:0 0 24px!important}
+ .workspace{display:flex!important;flex-direction:column;gap:0!important}
+ /* resultado sempre visível, fino, colado no topo */
+ .workspace>aside{position:sticky!important;top:56px;z-index:50;order:-1;margin:0 0 10px!important;width:100%}
+ .workspace>aside .legend,.workspace>aside .result-expand,.workspace>aside .aside-note{display:none!important}
+ .result{border-radius:0!important;border-left:0!important;border-right:0!important;box-shadow:0 8px 16px -12px rgba(0,0,0,.45)!important}
+ .result .result-body{display:none!important}
+ .result .result-top{padding:9px 14px!important;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;border-bottom:0!important}
+ .result .result-top .eyebrow{display:none}
+ .result h2{font-size:18px!important;margin:0!important;line-height:1.25;letter-spacing:-.2px!important}
+ .result .result-top p:last-child{margin:0!important;font-size:12px!important}
+ /* formulário */
+ form#assessment{padding:0 10px}
+ .step-nav{position:static;margin-bottom:10px!important}
+ .step-nav button{min-height:46px}
+ .panel{padding:16px 14px!important;border-radius:12px!important}
+ .section-heading{margin-bottom:14px!important}
+ input,select,textarea{font-size:16px!important}
+ input:not([type=checkbox]):not([type=file]),select{min-height:48px}
+ textarea{min-height:96px}
+ .opts{gap:7px}
+ .opts button{min-height:50px;font-size:14px}
+ .opts-chip button{flex:1 1 calc(50% - 7px)}
+ .opts-grid{grid-template-columns:1fr 1fr!important}
+ .opts-grid button{font-size:13px;padding:10px}
+ .opts-code button{min-height:58px}
+ .opts-code button b{font-size:19px}
+ .criterion{padding:12px!important}
+ label.confirma{min-height:52px;font-size:14px}
+ .cam-btn{min-height:62px;font-size:15px}
+ .id-edit{min-height:48px}
+ /* ações presas no rodapé */
+ .page-actions,.form-actions{position:sticky;bottom:0;z-index:40;background:#fff;margin:16px -14px -16px!important;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))!important;border-top:1px solid var(--line);box-shadow:0 -8px 16px -12px rgba(0,0,0,.3);display:flex;gap:8px;flex-wrap:nowrap!important;border-radius:0 0 12px 12px}
+ .page-actions .small{display:none}
+ .page-actions button,.form-actions button{flex:1;min-height:52px;font-size:15px!important;border-radius:11px}
+ .form-actions #saveButton{flex:0 0 auto;padding:0 14px;font-size:13px!important}
+ #sendDriveHint,#localEditHint{font-size:12px;margin:10px 2px 0}
+ #driveStatus{font-size:13px;margin:8px 2px}
+ details.technical,details.local-records{margin:12px 10px 0}
+ footer{padding:12px 10px}
+}
+@media (max-width:768px){.acta .cta-l{display:none}.acta .cta-s{display:inline}}

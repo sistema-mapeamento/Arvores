@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f2a21">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://vzukefbkvkkvkfijuduu.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Dashboard | Árvores</title>
+<link rel="icon" href="../icone.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css?v=1">
+<script src="../config.js?v=12"></script><script src="app.js?v=1" defer></script>
+</head>
+<body>
+<header class="bar">
+ <a class="logo" href="../">
+  <i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.03V6a3 3 0 1 1 6 0v.04a3.5 3.5 0 0 1 3.24 5.65A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/><path d="M12 15.5l-2-1.6M12 14l2.2-1.8"/></svg></i>
+  <span>Avaliação de Árvores<small>Usiminas · Ipatinga</small></span>
+ </a>
+ <nav class="nav" aria-label="Telas">
+  <a href="../"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span>Mapa</span></a>
+  <a href="./" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Dashboard</span></a>
+ </nav>
+ <span class="status" id="status" role="status">Carregando…</span>
+ <a class="cta" href="../avaliar/?nova=1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="cta-l">Nova avaliação</span><span class="cta-s">Avaliar</span></a>
+</header>
+
+<main class="wrap">
+ <div class="topo">
+  <div><h1>Dashboard</h1><p class="sub" id="sub">Situação das árvores avaliadas</p></div>
+  <div class="filtros">
+   <label><span>Período</span><select id="period"><option value="30">Últimos 30 dias</option><option value="90" selected>Últimos 90 dias</option><option value="365">Últimos 12 meses</option><option value="">Todo o histórico</option></select></label>
+   <label><span>Área</span><select id="area"><option value="">Todas as áreas</option></select></label>
+  </div>
+ </div>
+
+ <section class="kpis" aria-label="Números principais">
+  <div class="kpi"><span class="l">Árvores avaliadas</span><b id="kArv">0</b><small id="kInsp">0 inspeções</small></div>
+  <div class="kpi k4"><span class="l"><i class="dot r4"></i>R4 · Crítica</span><b id="kR4">0</b><small id="kR4p">0% das árvores</small></div>
+  <div class="kpi k3"><span class="l"><i class="dot r3"></i>R3 · Alta</span><b id="kR3">0</b><small id="kR3p">0% das árvores</small></div>
+  <div class="kpi kf4"><span class="l">F4 · Proteção imediata</span><b id="kF4">0</b><small>isolar a área</small></div>
+  <div class="kpi"><span class="l">Sem coordenadas</span><b id="kSem">0</b><small>não aparecem no mapa</small></div>
+ </section>
+
+ <section class="grade">
+  <article class="card c-6"><h2>Criticidade das árvores <small id="distSub"></small></h2><div class="stack" id="stack"></div><div class="leg" id="leg"></div></article>
+  <article class="card c-6"><h2>Inspeções por mês <small>quantas avaliações foram feitas</small></h2><div class="cols" id="months"></div><div class="monthlbl" id="monthsLbl"></div></article>
+  <article class="card c-4"><h2>Áreas com mais R3 e R4</h2><ul class="hbars" id="areas"></ul><p class="vazio" id="areasVazio" hidden>Nenhuma árvore R3 ou R4.</p></article>
+  <article class="card c-4"><h2>Componente avaliado</h2><ul class="hbars" id="comps"></ul></article>
+  <article class="card c-4"><h2>Local / alvo exposto</h2><ul class="hbars" id="alvos"></ul></article>
+  <article class="card c-12"><h2>Atenção primeiro <small>árvores R4 e R3, da mais grave para a mais recente</small></h2>
+   <div class="tabela"><table><thead><tr><th>Árvore</th><th>Criticidade</th><th>Área</th><th>Componente</th><th>Última inspeção</th><th></th></tr></thead><tbody id="tabela"></tbody></table></div>
+   <p class="vazio" id="tabelaVazia" hidden>Nenhuma árvore R3 ou R4 neste filtro.</p>
+  </article>
+ </section>
+</main>
+</body></html>
