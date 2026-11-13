@@ -59,7 +59,7 @@ function readTable(table){
   const tree=JSON.stringify([key(local),key(id)]);
   const targetGroup=category(target);
   const scenario=JSON.stringify([tree,key(component),standard.has(key(target))?key(targetGroup):key(target),key(type),key(stage)]);
-  return [{id,local,target,category:targetGroup,component,type,stage,risk:risk?Number(risk[1]):0,geo,inspected,stamp,received,tree,scenario,index,species:get('Espécie'),photos:get('Fotos').split(/[;\n]/).map(x=>x.trim()).filter(x=>/^(\/[\w\-./]+|https:\/\/[^\s"'<>]+)$/.test(x)).slice(0,10),test:/^teste(?:\b|_)/i.test(id)}];
+  return [{id,local,target,category:targetGroup,component,type,stage,risk:risk?Number(risk[1]):0,geo,inspected,stamp,received,tree,scenario,index,species:get('Espécie'),photos:get('Fotos').split(/[;\n]/).map(x=>x.trim()).filter(x=>/^(exemplo\/fotos\/[\w-]+\.jpg|https:\/\/[^\s"'<>]+)$/.test(x)).slice(0,10),test:/^teste(?:\b|_)/i.test(id)}];
  });
 }
 function compare(a,b){return (a.stamp||a.received).localeCompare(b.stamp||b.received)||a.received.localeCompare(b.received)||a.index-b.index;}

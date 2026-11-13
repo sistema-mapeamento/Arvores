@@ -215,16 +215,14 @@ async function registerScenario(scroll=true){
  catch{photoField.disabled=false;showError('Não foi possível salvar as fotos neste navegador. Verifique o espaço disponível ou remova os arquivos para prosseguir.', $('treePhotos'));return null;}
  finally{saving=false;photoField.disabled=false;}
  const next=editingId?records.map(x=>x.id===editingId?item:x):[...records,item];
- if(persistRecords(next)){try{localStorage.setItem('arvores-avaliador',data.evaluator);}catch{}form.elements.species.value=data.species;rememberSpecies(data.species);editingId=item.id;updateSaveMode();renderRecords();saveDraft();$('recordStatus').textContent=localEditOnly?`Alterações de ${item.data.treeId} salvas nesta cópia, sem novo envio.`:`Cópia local da árvore ${item.data.treeId} salva. Para o histórico central, confirme o envio no Google Forms.`;if(scroll){$('recordStatus').closest('details').open=true;$('recordStatus').scrollIntoView({behavior:'smooth',block:'center'});}return item;}
+ if(persistRecords(next)){try{localStorage.setItem('arvores-avaliador',data.evaluator);}catch{}form.elements.species.value=data.species;rememberSpecies(data.species);editingId=item.id;updateSaveMode();renderRecords();saveDraft();$('recordStatus').textContent=localEditOnly?`Alterações de ${item.data.treeId} salvas nesta cópia, sem novo envio.`:`Cópia local da árvore ${item.data.treeId} salva neste aparelho.`;if(scroll){$('recordStatus').closest('details').open=true;$('recordStatus').scrollIntoView({behavior:'smooth',block:'center'});}return item;}
  return null;
 }
 form.addEventListener('submit',event=>{event.preventDefault();registerScenario();});
 $('sendDrive').addEventListener('click',async()=>{
  if(localEditOnly)return;
  const item=await registerScenario(false);if(!item)return;
- const url=window.TreeDrive.reviewUrl(item);
- $('driveStatus').innerHTML=`<strong>Confirmação no Google Forms:</strong> confira os dados e clique em Enviar para registrar no Drive. <a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Abrir novamente o formulário preenchido</a>.`;
- const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.click();
+ await window.TreeEnvio.enviar(item);
 });
 $('newButton').addEventListener('click',()=>{
  if(saving)return;

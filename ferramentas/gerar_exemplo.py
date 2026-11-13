@@ -1,4 +1,4 @@
-# Gera ferramentas/exemplo-historico.json: árvores INVENTADAS, só para ver o mapa no computador (ver-local.js).
+# Gera ferramentas/exemplo-historico.json: árvores INVENTADAS, só para ver o mapa no computador (dist/exemplo; abrir com ?exemplo).
 # Uso: python ferramentas/gerar_exemplo.py
 import json, random, os
 from datetime import datetime, timedelta
@@ -25,11 +25,11 @@ for i, r in enumerate(riscos):
     quando = hoje - timedelta(days=random.randint(0, 85), hours=random.randint(0, 9))
     alvo = random.choice(alvos)
     geo = '' if i in (5, 33) else f'Coordenadas da árvore (latitude, longitude): {lat:.6f}; {lon:.6f}'
-    linhas.append([f'ARV-0{101+i:03d}', alvo, random.choice(esp), random.choice(comp), alvo, random.choice(tipos), 'Exposição inicial', quando.strftime('%d/%m/%Y %H:%M'), geo, f'R{r}', ';'.join(f'/exemplo-fotos/arvore-{n}.jpg' for n in random.sample(range(1, 13), random.choice([1, 1, 2, 2, 3, 3])))])
+    linhas.append([f'ARV-0{101+i:03d}', alvo, random.choice(esp), random.choice(comp), alvo, random.choice(tipos), 'Exposição inicial', quando.strftime('%d/%m/%Y %H:%M'), geo, f'R{r}', ';'.join(f'exemplo/fotos/arvore-{n}.jpg' for n in random.sample(range(1, 13), random.choice([1, 1, 2, 2, 3, 3])))])
 # 3 reavaliações (mesma árvore, data mais nova) para mostrar o histórico na ficha
 for i in (2, 9, 17):
-    l = list(linhas[i + 1]); l[10] = f'/exemplo-fotos/arvore-{(i % 12) + 1}.jpg'; l[7] = (hoje - timedelta(days=1, hours=i)).strftime('%d/%m/%Y %H:%M'); l[9] = f'R{max(1, int(l[9][1]) - 1)}'
+    l = list(linhas[i + 1]); l[10] = f'exemplo/fotos/arvore-{(i % 12) + 1}.jpg'; l[7] = (hoje - timedelta(days=1, hours=i)).strftime('%d/%m/%Y %H:%M'); l[9] = f'R{max(1, int(l[9][1]) - 1)}'
     linhas.append(l)
 json.dump({'table': linhas, 'updatedAt': hoje.isoformat(), 'googleBaseAvailable': False, 'exemplo': True},
-          open(os.path.join(raiz, 'ferramentas/exemplo-historico.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+          open(os.path.join(raiz, 'dist/exemplo/historico.json'), 'w', encoding='utf-8'), ensure_ascii=False)
 print('ok', len(linhas) - 1, 'linhas')

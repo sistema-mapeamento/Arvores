@@ -53,7 +53,7 @@
  }
 
  async function loadFences() {
-  const res = await fetch('/api/mapa/cercas', { cache: 'no-store' });
+  const res = await fetch('dados/cercas.geojson', { cache: 'force-cache' });
   if (!res.ok) throw Object.assign(new Error('cercas'), { status: res.status });
   const gj = await res.json();
   for (const f of gj.features || []) {
@@ -62,7 +62,7 @@
    const poly = L.polygon(ring.map(([lon, lat]) => [lat, lon]), planta
     ? { color: '#fff', weight: 2, opacity: .9, fill: false, interactive: false }
     : { color: '#fff', weight: 1, opacity: .55, fillColor: '#fff', fillOpacity: .04 });
-   if (planta) plantBounds = poly.getBounds();
+   if (planta) { const b = poly.getBounds(), t = x => (x.getEast() - x.getWest()) * (x.getNorth() - x.getSouth()); if (!plantBounds || t(b) > t(plantBounds)) plantBounds = b; }
    else {
     poly.bindTooltip(nome, { sticky: true, className: 'tip' });
     poly.on('click', () => { state.area = nome; render(); });
@@ -76,20 +76,34 @@
 
  async function loadHistory() {
   $('status').textContent = 'Atualizando…';
-  let res;
-  try { res = await fetch('/api/mapa/historico', { cache: 'no-store' }); }
-  catch { $('status').textContent = 'Sem conexão'; return; }
-  if (res.status === 401 || res.status === 403) return gate(res.status);
-  if (!res.ok) { $('status').textContent = 'Histórico indisponível agora'; return; }
-  const data = await res.json();
+  let data;
+  try { data = await buscarHistorico(); }
+  catch { $('status').textContent = navigator.onLine ? 'Banco indisponível agora' : 'Sem conexão'; return; }
   state.exemplo = !!data.exemplo;
   state.rows = D.readTable(data.table).map(r => ({ ...r, area: areaOf(r.geo) }));
   const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  $('status').textContent = 'Atualizado às ' + hora + (state.exemplo ? ' · DADOS DE EXEMPLO' : '');
+  $('status').textContent = (state.exemplo ? 'DADOS DE EXEMPLO · ' : '') + (state.rows.length ? 'Atualizado às ' + hora : 'Nenhuma avaliação registrada ainda');
   render();
   // link direto para uma árvore: /#ARV-0130
   const alvo = decodeURIComponent(location.hash.slice(1));
   if (alvo && !state.sel) { const p = D.views(state.rows, { risks: [1, 2, 3, 4] }).points.find(x => x.id === alvo); if (p) select(p, true); }
+ }
+ // histórico: banco Supabase (público) ou dados de exemplo (?exemplo)
+ const CFG = window.ARVORES_CONFIG || {};
+ const EXEMPLO = new URLSearchParams(location.search).has('exemplo') || !CFG.supabaseUrl;
+ const TIPO = { pessoas: 'Pessoas', fixo: 'Instalação / estrutura fixa alcançável', movel: 'Veículo / equipamento / bem móvel' };
+ const SIT = { inicial: 'Exposição inicial', 'apos-controles': 'Exposição após os controles' };
+ const CAB = ['ID da árvore', 'Unidade / setor / localização', 'Espécie', 'Componente avaliado', 'Local / alvo exposto', 'Tipo de alvo', 'Situação dos controles', 'Data e hora da inspeção', 'Geometria, alcance e ocupação', 'R registrado', 'Fotos'];
+ async function buscarHistorico() {
+  if (EXEMPLO) { const r = await fetch('exemplo/historico.json', { cache: 'no-store' }); if (!r.ok) throw new Error('exemplo'); return r.json(); }
+  const r = await fetch(CFG.supabaseUrl + '/rest/v1/inspecoes_publicas?select=*&order=inspecionado_em.desc&limit=20000', { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
+  if (!r.ok) throw new Error('banco ' + r.status);
+  const p2 = n => String(n).padStart(2, '0');
+  const local = iso => { const d = new Date(iso); return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
+  const linhas = (await r.json()).map(x => [x.arvore_id, '', x.especie || '', x.componente, x.alvo, TIPO[x.tipo_alvo] || x.tipo_alvo, SIT[x.situacao_controles] || '',
+   local(x.inspecionado_em), x.latitude != null ? 'Coordenadas da árvore (latitude, longitude): ' + x.latitude + '; ' + x.longitude : '', 'R' + x.r,
+   (x.fotos || []).map(id => 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w1000').join(';')]);
+  return { table: [CAB, ...linhas], exemplo: false };
  }
  function gate(code) {
   $('gate').hidden = false;
@@ -284,7 +298,7 @@
    galeria(p.tree),
    dl,
    hist.length > 1 ? el('div', { class: 'hist' }, el('div', {}, el('b', {}, 'Histórico')), ...hist.slice(0, 5).map(r => el('div', {}, el('span', {}, dataBR(r.stamp) + ' · ' + (r.component || '')), el('span', {}, 'R' + r.risk)))) : null,
-   el('div', { class: 'acoes' }, el('a', { class: 'cta', href: '/avaliar?arvore=' + encodeURIComponent(p.id) }, 'Reavaliar esta árvore'))].filter(Boolean));
+   el('div', { class: 'acoes' }, el('a', { class: 'cta', href: 'avaliar/?arvore=' + encodeURIComponent(p.id) }, 'Reavaliar esta árvore'))].filter(Boolean));
   $('sel').hidden = false;
   showTab(abaAtual);
  }
