@@ -156,3 +156,6 @@ main.wrap{max-width:none!important;padding:0 24px!important}
  footer{padding:12px 10px}
 }
 @media (max-width:768px){.acta .cta-l{display:none}.acta .cta-s{display:inline}}
+
+/* 12/11/2026: sem o botão "Salvar neste navegador" (o envio já guarda no aparelho quando não há internet) */
+#saveButton.secondary{display:none!important}
