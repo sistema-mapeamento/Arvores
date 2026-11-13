@@ -69,7 +69,6 @@ button,select,input{font:inherit;color:inherit}
 .resizer{position:absolute;left:-5px;top:0;bottom:0;width:10px;cursor:col-resize;z-index:10}
 .resizer::after{content:"";position:absolute;left:4px;top:50%;width:2px;height:44px;margin-top:-22px;border-radius:2px;background:var(--line);transition:background .15s}
 .resizer:hover::after,body.arrastando .resizer::after{background:var(--accent)}
-.sheet-handle{display:none}
 .side-top{display:flex;align-items:flex-end;border-bottom:1px solid var(--line);padding:8px 8px 0 14px;flex:none;gap:4px}
 .tabs{display:flex;gap:2px;flex:1;min-width:0}
 .tabs button{flex:1;border:0;background:none;padding:10px 4px 11px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;display:inline-flex;justify-content:center;align-items:center;gap:6px;white-space:nowrap}
@@ -114,10 +113,32 @@ button,select,input{font:inherit;color:inherit}
 .ficha table.dados tr:first-child th,.ficha table.dados tr:first-child td{border-top:0}
 .ficha table.dados th{width:38%;background:#e2f0e7;color:#4f6b5b;font-weight:500}
 .ficha table.dados td{font-weight:600;color:var(--ink)}
-.ficha .hist{padding:0 14px 10px;font-size:12px}
-.ficha .hist div{display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid #d7eadd;color:var(--ink2)}
+.ficha .hist{padding:0 14px 10px;font-size:12.5px}
+.ficha .hist div{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-top:1px solid #d7eadd;color:var(--ink2)}
+.ficha .hist .hist-t{border-top:0}
+.ficha .hist-d{display:flex;align-items:center;gap:10px;font-weight:600}
+.ficha .excluir{border:1px solid #e9c3ca;background:#fff;color:#a8243a;border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;min-height:32px}
+.ficha .excluir:hover{background:#f8e3e7}
+.exdlg{border:0;border-radius:14px;padding:18px;width:min(440px,calc(100vw - 24px));box-shadow:0 30px 80px -20px rgba(0,0,0,.5);color:var(--ink)}
+.exdlg::backdrop{background:rgba(6,14,11,.55)}
+.exdlg h2{margin:0 0 6px;font-size:18px}
+.exdlg form{display:flex;flex-direction:column;gap:10px}
+.exdlg p{margin:0;font-size:13.5px}
+.exdlg .exnota{color:var(--muted);font-size:12.5px}
+.exdlg label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:13.5px}
+.exdlg textarea,.exdlg input{font:inherit;font-weight:400;font-size:15px;border:1px solid var(--line);border-radius:9px;padding:9px 11px;min-height:44px}
+.exerro{background:#f8e3e7;color:#7d1527;border-radius:9px;padding:9px 11px;font-weight:600}
+.expe{display:flex;gap:8px;justify-content:flex-end}
+.expe button{min-height:44px;padding:0 18px;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;border:1px solid var(--line);background:#fff}
+.expe #exOk{background:#a8243a;color:#fff;border-color:#a8243a}
+.expe #exOk:disabled{opacity:.6}
 .ficha .acoes{padding:0 14px 14px}
 .ficha .acoes .cta{width:100%;background:var(--brand);min-height:46px;font-size:14px}
+.ficha .acoes{display:flex;flex-direction:column;gap:8px}
+.ficha .acoes .cta.sec{background:#fff;color:var(--brand);border:1px solid #cfe4d6}
+.ficha .acoes p{margin:0;font-size:13px;padding:9px 11px;border-radius:9px}
+.ficha .acao-aberta{background:#fdece4;color:#8a3412}
+.ficha .acao-feita{background:#e3f1ea;color:#163a2e}
 .gal{padding:10px 10px 0}
 .gal button{border:0;padding:0;background:none;cursor:zoom-in;display:block}
 .gal .big{position:relative;width:100%}
@@ -167,14 +188,12 @@ button,select,input{font:inherit;color:inherit}
  .side[data-modo="lista"] .side-head{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);flex:none;background:#fff}
  .side-head button{display:inline-flex;align-items:center;gap:4px;border:0;background:var(--soft);border-radius:10px;padding:9px 12px 9px 8px;font-weight:600;font-size:14px;color:var(--ink);min-height:42px;cursor:pointer}
  .side-head h2{margin:0 0 0 6px;font-size:17px}
- /* ficha por baixo do mapa */
- .side[data-modo="ficha"]{display:flex;height:calc(var(--sheet-h) + var(--safe-b));border-radius:18px 18px 0 0;box-shadow:0 -10px 30px -10px rgba(0,0,0,.35);transition:height .22s ease}
- .side.sem-animacao{transition:none}
- .side[data-modo="ficha"] .sheet-handle{display:flex;justify-content:center;align-items:center;height:28px;flex:none;cursor:grab;touch-action:none}
- .sheet-handle span{width:46px;height:5px;border-radius:99px;background:#cfd6d1}
- /* controles do mapa acima da ficha */
- .legend{bottom:calc(var(--sheet-h) + 12px + var(--safe-b));left:10px;gap:8px;font-size:11px;padding:5px 9px;transition:bottom .22s ease}
- .leaflet-bottom{bottom:calc(var(--sheet-h) + 6px + var(--safe-b));transition:bottom .22s ease}
+ /* página da árvore (tela cheia, 13/11) */
+ .side[data-modo="ficha"]{display:flex;top:var(--bar-h);border-radius:0}
+ .side[data-modo="lista"] .side-head,.side[data-modo="ficha"] .side-head{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);flex:none;background:#fff}
+ .side[data-modo="ficha"] .ficha .x{display:none}
+ .side[data-modo="ficha"] .ficha{margin:12px 12px 24px}
+ .legend{left:10px;gap:8px;font-size:11px;padding:5px 9px}
  .leaflet-control-attribution{display:none}
  .filtro{left:10px;top:10px}
  .pop{max-height:calc(100vh - 140px)}

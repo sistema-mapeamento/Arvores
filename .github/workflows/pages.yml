@@ -30,7 +30,7 @@ jobs:
         run: |
           V="${GITHUB_SHA::7}"
           echo "{\"v\":\"$V\"}" > dist/versao.json
-          for f in dist/index.html dist/avaliar/index.html dist/dashboard/index.html; do
+          for f in dist/index.html dist/avaliar/index.html dist/dashboard/index.html dist/acoes/index.html; do
             sed -i -E "s/__VERSAO__/$V/g; s/\?v=[0-9a-z]+\"/?v=$V\"/g" "$f"
           done
           grep -o 'versao" content="[^"]*' dist/index.html

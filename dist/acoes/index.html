@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f2a21"><meta name="versao" content="__VERSAO__">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://vzukefbkvkkvkfijuduu.supabase.co; img-src 'self' data: blob: https://vzukefbkvkkvkfijuduu.supabase.co https://drive.google.com https://*.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Ações | Árvores</title>
+<link rel="icon" href="../icone.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../dashboard/style.css?v=3"><link rel="stylesheet" href="style.css?v=2"><link rel="stylesheet" href="../menu.css?v=2">
+<script src="../atualizar.js?v=1" data-base="../" data-sempre="nao"></script><script src="../config.js?v=12"></script><script src="app.js?v=2" defer></script><script src="../envio.js?v=8" defer></script><script src="../menu.js?v=2" data-base="../" data-tela="acoes" defer></script>
+</head>
+<body>
+<header class="bar">
+ <a class="logo" href="../">
+  <i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.03V6a3 3 0 1 1 6 0v.04a3.5 3.5 0 0 1 3.24 5.65A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/><path d="M12 15.5l-2-1.6M12 14l2.2-1.8"/></svg></i>
+  <span>Avaliação de Árvores<small>Usiminas · Ipatinga</small></span>
+ </a>
+ <nav class="nav" aria-label="Telas">
+  <a href="../"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span>Mapa</span></a>
+  <a href="./" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><span>Ações</span></a>
+  <a href="../dashboard/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Dashboard</span></a>
+ </nav>
+ <span class="status" id="status" role="status">Carregando…</span>
+ <a class="cta" href="../avaliar/?nova=1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="cta-l">Nova avaliação</span><span class="cta-s">Avaliar</span></a>
+</header>
+
+<main class="wrap">
+ <div class="topo">
+  <div><h1>Ações</h1><p class="sub">Cada avaliação gera uma ação. Dê baixa dizendo o que foi feito: poda, poda drástica ou supressão.</p></div>
+ </div>
+
+ <div class="aviso-ok" id="avisoNova" hidden></div>
+ <p class="pendentes" id="pendentes" hidden></p>
+
+ <div class="ac-filtros">
+  <div class="ac-seg" role="group" aria-label="Situação">
+   <button type="button" data-st="aberta" aria-pressed="true">Abertas <b id="nAbertas">0</b></button>
+   <button type="button" data-st="concluida" aria-pressed="false">Com baixa <b id="nConcluidas">0</b></button>
+   <button type="button" data-st="" aria-pressed="false">Todas <b id="nTodas">0</b></button>
+  </div>
+  <label class="ac-busca"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="busca" type="search" placeholder="Buscar árvore, área, responsável…" autocomplete="off"></label>
+ </div>
+
+ <ul class="ac-lista" id="lista"></ul>
+ <p class="vazio" id="vazio" hidden>Nenhuma ação neste filtro.</p>
+ <button type="button" class="ac-mais" id="mais" hidden>Mostrar mais</button>
+</main>
+
+<dialog class="ac-dlg" id="dlg" aria-labelledby="dlgTitulo">
+ <form id="baixa" novalidate>
+  <div class="dlg-cab"><div><h2 id="dlgTitulo">Dar baixa na ação</h2><p id="dlgArvore"></p></div><button type="button" class="dlg-x" id="dlgFechar" aria-label="Fechar">×</button></div>
+  <div class="dlg-corpo">
+   <fieldset class="tipos"><legend>O que foi feito? *</legend>
+    <label class="tipo t-poda"><input type="radio" name="tipo" value="poda" required><span><b>PODA</b><small>Retirada de galhos</small></span></label>
+    <label class="tipo t-drastica"><input type="radio" name="tipo" value="poda_drastica"><span><b>PODA DRÁSTICA</b><small>Corte de grande parte da copa</small></span></label>
+    <label class="tipo t-supressao"><input type="radio" name="tipo" value="supressao"><span><b>SUPRESSÃO</b><small>Retirada da árvore</small></span></label>
+   </fieldset>
+   <fieldset class="pos"><legend>Fotos do pós (depois do serviço)</legend>
+    <div class="pos-botoes">
+     <button type="button" class="pos-btn principal" id="btnCam"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/></svg><span>Tirar foto</span></button>
+     <button type="button" class="pos-btn" id="btnGal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span>Da galeria</span></button>
+     <input type="file" id="inCam" accept="image/*" capture="environment" hidden>
+     <input type="file" id="inGal" accept="image/*" multiple hidden>
+    </div>
+    <ul class="pos-fotos" id="posFotos"></ul>
+    <p class="dica" id="posDica">Até 3 fotos. Cada foto recebe ID da árvore, "PÓS", data e hora.</p>
+   </fieldset>
+   <label class="campo">Comentário *<textarea name="comentario" rows="3" maxlength="2000" required placeholder="Ex.: poda dos galhos sobre a via; área liberada às 15h."></textarea></label>
+   <label class="campo">Quem deu baixa *<input name="responsavel" maxlength="120" required autocomplete="name" placeholder="Nome e função"></label>
+   <p class="erro" id="erro" role="alert" hidden></p>
+  </div>
+  <div class="dlg-pe"><button type="button" class="ac-sec" id="dlgCancelar">Cancelar</button><button type="submit" class="ac-pri" id="enviar">Dar baixa</button></div>
+ </form>
+</dialog>
+<dialog class="lb" id="lb" aria-label="Foto"><img id="lbImg" alt="Foto"><button type="button" class="lb-x" id="lbX" aria-label="Fechar">×</button></dialog>
+</body></html>

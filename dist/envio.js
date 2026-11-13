@@ -114,8 +114,12 @@
   const { ok, resto } = await processarFotos(tarefas, true);
   if (resto.length) gravar(FILA_FOTOS, ler(FILA_FOTOS).concat(resto));
   const ver = document.createElement('a'); ver.href = '../#' + encodeURIComponent(p.arvore_id); ver.textContent = 'Ver no mapa';
+  // toda avaliação gera uma ação (SQL 04): no celular abre direto a tela de Ações; no computador fica o link
+  const acao = '../acoes/?arvore=' + encodeURIComponent(p.arvore_id) + '&nova=1';
+  const irAcao = document.createElement('a'); irAcao.href = acao; irAcao.textContent = 'Abrir a ação gerada';
   aviso(negrito('Avaliação registrada. '), 'Árvore ' + p.arvore_id + ' · R' + res.r + ' ' + (NOMES[res.r] || '') + '. ',
-   qtd ? (ok + ' de ' + qtd + (qtd > 1 ? ' fotos enviadas' : ' foto enviada') + (resto.length ? ' (as outras vão quando a internet melhorar)' : '') + '. ') : '', ver);
+   qtd ? (ok + ' de ' + qtd + (qtd > 1 ? ' fotos enviadas' : ' foto enviada') + (resto.length ? ' (as outras vão quando a internet melhorar)' : '') + '. ') : '', irAcao, ' · ', ver);
+  if (matchMedia('(max-width: 768px)').matches) setTimeout(() => location.assign(acao), 1200);
  }
 
  let ocupado = false;

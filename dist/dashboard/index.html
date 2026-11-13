@@ -6,8 +6,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://vzukefbkvkkvkfijuduu.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Dashboard | Árvores</title>
 <link rel="icon" href="../icone.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=2"><link rel="stylesheet" href="../menu.css?v=1">
-<script src="../atualizar.js?v=1" data-base="../"></script><script src="../config.js?v=12"></script><script src="app.js?v=2" defer></script><script src="../menu.js?v=1" data-base="../" data-tela="dashboard" defer></script>
+<link rel="stylesheet" href="style.css?v=3"><link rel="stylesheet" href="../menu.css?v=2">
+<script src="../atualizar.js?v=1" data-base="../"></script><script src="../config.js?v=12"></script><script src="app.js?v=3" defer></script><script src="../menu.js?v=2" data-base="../" data-tela="dashboard" defer></script>
 </head>
 <body>
 <header class="bar">
@@ -17,6 +17,7 @@
  </a>
  <nav class="nav" aria-label="Telas">
   <a href="../"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span>Mapa</span></a>
+  <a href="../acoes/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><span>Ações</span></a>
   <a href="./" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Dashboard</span></a>
  </nav>
  <span class="status" id="status" role="status">Carregando…</span>
@@ -40,12 +41,28 @@
   <div class="kpi"><span class="l">Sem coordenadas</span><b id="kSem">0</b><small>não aparecem no mapa</small></div>
  </section>
 
+ <section class="acoes-dash" id="acoesDash" aria-label="Ações">
+  <div class="ad-cab"><h2>Ações <small>toda avaliação gera uma ação · baixa com poda, poda drástica ou supressão</small></h2><a href="../acoes/">Abrir Ações →</a></div>
+  <div class="kpis ad-kpis">
+   <div class="kpi ka"><span class="l">Ações abertas agora</span><b id="aAbertas">0</b><small id="aAbertasSub">esperando baixa</small></div>
+   <div class="kpi kc"><span class="l">Baixas no período</span><b id="aBaixas">0</b><small id="aBaixasSub">ações concluídas</small></div>
+   <div class="kpi kp"><span class="l"><i class="dot tp"></i>Podas</span><b id="aPoda">0</b><small id="aPodaP">0% das baixas</small></div>
+   <div class="kpi kd"><span class="l"><i class="dot td"></i>Podas drásticas</span><b id="aDrastica">0</b><small id="aDrasticaP">0% das baixas</small></div>
+   <div class="kpi ks"><span class="l"><i class="dot ts"></i>Supressões</span><b id="aSupressao">0</b><small id="aSupressaoP">0% das baixas</small></div>
+  </div>
+  <p class="vazio" id="acoesAviso" hidden>As ações aparecem aqui depois que o SQL 04 (ações) for rodado no banco.</p>
+ </section>
+
  <section class="grade">
   <article class="card c-6"><h2>Criticidade das árvores <small id="distSub"></small></h2><div class="stack" id="stack"></div><div class="leg" id="leg"></div></article>
   <article class="card c-6"><h2>Inspeções por mês <small>quantas avaliações foram feitas</small></h2><div class="cols" id="months"></div><div class="monthlbl" id="monthsLbl"></div></article>
   <article class="card c-4"><h2>Áreas com mais R3 e R4</h2><ul class="hbars" id="areas"></ul><p class="vazio" id="areasVazio" hidden>Nenhuma árvore R3 ou R4.</p></article>
   <article class="card c-4"><h2>Componente avaliado</h2><ul class="hbars" id="comps"></ul></article>
   <article class="card c-4"><h2>Local / alvo exposto</h2><ul class="hbars" id="alvos"></ul></article>
+  <article class="card c-12"><h2>Ações abertas <small>da mais grave para a mais antiga · falta dar baixa</small></h2>
+   <div class="tabela"><table><thead><tr><th>Árvore</th><th>Criticidade</th><th>Área</th><th>Avaliada em</th><th>Aberta há</th><th></th></tr></thead><tbody id="tabAcoes"></tbody></table></div>
+   <p class="vazio" id="tabAcoesVazia" hidden>Nenhuma ação aberta neste filtro.</p>
+  </article>
   <article class="card c-12"><h2>Atenção primeiro <small>árvores R4 e R3, da mais grave para a mais recente</small></h2>
    <div class="tabela"><table><thead><tr><th>Árvore</th><th>Criticidade</th><th>Área</th><th>Componente</th><th>Última inspeção</th><th></th></tr></thead><tbody id="tabela"></tbody></table></div>
    <p class="vazio" id="tabelaVazia" hidden>Nenhuma árvore R3 ou R4 neste filtro.</p>

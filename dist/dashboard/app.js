@@ -8,7 +8,7 @@
  const NOMES = { 1: 'Baixa', 2: 'Moderada', 3: 'Alta', 4: 'Crítica' };
  const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
  const TIPO = { 'Pessoas': 'pessoas', 'Instalação / estrutura fixa alcançável': 'fixo', 'Veículo / equipamento / bem móvel': 'movel' };
- let dados = [], areas = [];
+ let dados = [], areas = [], acoes = null;
 
  function el(tag, attrs, ...kids) {
   const e = document.createElement(tag);
@@ -49,6 +49,43 @@
    { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
   if (!r.ok) throw new Error('banco ' + r.status);
   return (await r.json()).map(x => ({ id: x.arvore_id, quando: new Date(x.inspecionado_em), r: x.r, f: x.f, comp: x.componente, alvo: x.alvo, tipo: x.tipo_alvo, lat: x.latitude, lon: x.longitude }));
+ }
+
+ // ações (SQL 04). Exemplo: 1 ação aberta por árvore (a última avaliação).
+ async function carregarAcoes() {
+  if (EXEMPLO) {
+   const ult = new Map(); for (const x of dados) { const a = ult.get(x.id); if (!a || x.quando > a.quando) ult.set(x.id, x); }
+   return [...ult.values()].map(x => ({ arvore: x.id, status: 'aberta', tipo: null, concluida: null, criada: x.quando, avaliada: x.quando, r: x.r, area: x.area, lat: x.lat }));
+  }
+  const r = await fetch(CFG.supabaseUrl + '/rest/v1/acoes_publicas?select=arvore_id,status,tipo,concluida_em,criado_em,inspecionado_em,r,latitude,longitude&status=neq.substituida&limit=20000',
+   { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
+  if (!r.ok) return null;
+  return (await r.json()).map(x => ({ arvore: x.arvore_id, status: x.status, tipo: x.tipo, concluida: x.concluida_em ? new Date(x.concluida_em) : null,
+   criada: new Date(x.criado_em), avaliada: new Date(x.inspecionado_em), r: x.r, lat: x.latitude, area: areaDe(x.latitude, x.longitude) }));
+ }
+ function renderAcoes(inicio, area) {
+  $('acoesAviso').hidden = !!acoes;
+  const lista = (acoes || []).filter(a => !area || a.area === area);
+  const abertas = lista.filter(a => a.status === 'aberta');
+  const baixas = lista.filter(a => a.status === 'concluida' && (!inicio || a.concluida >= inicio));
+  const t = { poda: 0, poda_drastica: 0, supressao: 0 }; for (const a of baixas) if (t[a.tipo] !== undefined) t[a.tipo]++;
+  const crit = abertas.filter(a => a.r >= 3).length;
+  $('aAbertas').textContent = abertas.length;
+  $('aAbertasSub').textContent = crit ? crit + ' delas R3 ou R4' : 'esperando baixa';
+  $('aBaixas').textContent = baixas.length;
+  $('aBaixasSub').textContent = $('period').selectedOptions[0].textContent.toLowerCase();
+  $('aPoda').textContent = t.poda; $('aPodaP').textContent = pct(t.poda, baixas.length) + ' das baixas';
+  $('aDrastica').textContent = t.poda_drastica; $('aDrasticaP').textContent = pct(t.poda_drastica, baixas.length) + ' das baixas';
+  $('aSupressao').textContent = t.supressao; $('aSupressaoP').textContent = pct(t.supressao, baixas.length) + ' das baixas';
+  const hoje = Date.now(), ex = EXEMPLO ? '&exemplo' : '';
+  const tab = abertas.sort((a, b) => (b.r || 0) - (a.r || 0) || a.criada - b.criada).slice(0, 50);
+  $('tabAcoes').replaceChildren(...tab.map(a => {
+   const dias = Math.max(0, Math.floor((hoje - a.criada) / 864e5));
+   return el('tr', {}, el('td', { class: 'id' }, a.arvore), el('td', {}, a.r ? risco(a.r) : '—'), el('td', {}, a.area || 'Sem coordenadas'), el('td', {}, dataBR(a.avaliada)),
+    el('td', { class: dias >= 7 ? 'atraso' : '' }, dias === 0 ? 'hoje' : dias === 1 ? '1 dia' : dias + ' dias'),
+    el('td', {}, el('a', { href: '../acoes/?arvore=' + encodeURIComponent(a.arvore) + ex }, 'Dar baixa')));
+  }));
+  $('tabAcoesVazia').hidden = tab.length > 0;
  }
 
  // ---------- desenho ----------
@@ -115,12 +152,14 @@
    el('td', { class: 'id' }, a.id), el('td', {}, risco(a.r)), el('td', {}, a.area || 'Sem coordenadas'), el('td', {}, a.comp || '—'), el('td', {}, dataBR(a.quando)),
    el('td', {}, a.lat != null ? el('a', { href: '../' + (EXEMPLO ? '?exemplo' : '') + '#' + encodeURIComponent(a.id) }, 'Ver no mapa') : ''))));
   $('tabelaVazia').hidden = crit.length > 0;
+  renderAcoes(inicio, area);
  }
 
  async function iniciar() {
   try {
    await carregarAreas();
    dados = (await carregar()).map(x => ({ ...x, area: areaDe(x.lat, x.lon) }));
+   acoes = await carregarAcoes().catch(() => null);
    const nomes = [...new Set(dados.map(x => x.area).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
    $('area').append(...nomes.map(n => el('option', { value: n }, n)));
    const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });

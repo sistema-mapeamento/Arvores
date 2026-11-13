@@ -14,10 +14,12 @@
   prioridades: '<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
   registros: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
   dashboard: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
-  avaliar: '<path d="M12 5v14M5 12h14"/>'
+  acoes: '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>',
+ avaliar: '<path d="M12 5v14M5 12h14"/>'
  };
  const itens = [
   ['mapa', 'Mapa', 'Ver as árvores no mapa', comEx(base)],
+  ['acoes', 'Ações', 'Dar baixa: poda, poda drástica, supressão', comEx(base + 'acoes/')],
   ['prioridades', 'Prioridades', 'Árvores R4 e R3 primeiro', comEx(base, 'ver=prioridades')],
   ['registros', 'Registros', 'Todas as inspeções, com busca', comEx(base, 'ver=registros')],
   ['dashboard', 'Dashboard', 'Números e gráficos', comEx(base + 'dashboard/')],

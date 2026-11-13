@@ -2,7 +2,7 @@
 // Painel lateral (12/11/2026).
 // Computador: arraste a borda esquerda para alargar/estreitar; botão › recolhe; botão "Painel" no mapa reabre.
 // Celular: o mapa fica em tela cheia (só mapa + Filtros). O menu ☰ abre Prioridades ou Registros
-//   em tela própria; tocar numa árvore sobe só a ficha por baixo (arrastar: metade ↔ quase cheia; para baixo fecha).
+//   em tela própria; tocar numa árvore abre a página da árvore em tela cheia (13/11: saiu a barra de arrastar).
 (function () {
  const $ = id => document.getElementById(id);
  const main = $('main'), side = $('side'), root = document.documentElement;
@@ -39,13 +39,15 @@
  $('expandBtn').addEventListener('click', () => { estado.recolhido = false; salvar(); aplicarComputador(); });
 
  // ---------- celular ----------
- // modo: 'mapa' (painel escondido) | 'lista' (Prioridades/Registros em tela cheia) | 'ficha' (ficha por baixo do mapa)
- let modo = 'mapa', altura = 'meia', antesDaFicha = null;
- const alturas = () => ({ meia: Math.round(window.innerHeight * 0.5), cheia: Math.round(window.innerHeight * 0.88) });
- function aplicarCelular(px) {
+ // modo: 'mapa' (painel escondido) | 'lista' (Prioridades/Registros em tela cheia) | 'ficha' (página da árvore, tela cheia)
+ let modo = 'mapa', antesDaFicha = null;
+ function aplicarCelular() {
   side.dataset.modo = modo;
-  const h = modo === 'ficha' ? (px ?? alturas()[altura]) : 0;
-  root.style.setProperty('--sheet-h', h + 'px');
+  root.style.setProperty('--sheet-h', '0px');
+  // botão de voltar: da árvore aberta pela lista volta para a lista
+  const volta = $('sideVoltar').lastChild;
+  if (volta && volta.nodeType === 3) volta.textContent = modo === 'ficha' && antesDaFicha === 'lista' ? 'Voltar' : 'Mapa';
+  if (modo === 'ficha') $('sideTitulo').textContent = 'Árvore';
   refazerMapa();
  }
  function abrirLista(aba) {
@@ -53,8 +55,8 @@
   antesDaFicha = null;
   ui().fecharFicha?.();
   ui().aba?.(aba);
-  $('sideTitulo').textContent = TITULOS[aba] || '';
   modo = 'lista'; aplicarCelular();
+  $('sideTitulo').textContent = TITULOS[aba] || '';
   window.TreeMenu?.marcar(aba);
   $('side').querySelector('.side-body').scrollTop = 0;
  }
@@ -64,32 +66,18 @@
   modo = 'mapa'; aplicarCelular();
   window.TreeMenu?.marcar('mapa');
  }
- $('sideVoltar').addEventListener('click', soMapa);
+ $('sideVoltar').addEventListener('click', () => { if (modo === 'ficha') ui().fecharFicha?.(); else soMapa(); });
 
- // ficha: sobe por baixo; arrastar a alça muda a altura; puxar bem para baixo fecha
+ // árvore: abre em página própria (tela cheia); "Mapa"/"Voltar" fecha
  window.addEventListener('arvore-aberta', () => {
-  if (celular.matches) { if (modo === 'lista') antesDaFicha = 'lista'; modo = 'ficha'; altura = 'meia'; aplicarCelular(); }
+  if (celular.matches) { if (modo === 'lista') antesDaFicha = 'lista'; modo = 'ficha'; aplicarCelular(); $('side').querySelector('.side-body').scrollTop = 0; }
   else if (estado.recolhido) { estado.recolhido = false; salvar(); aplicarComputador(); }
  });
  window.addEventListener('arvore-fechada', () => {
   if (!celular.matches || modo !== 'ficha') return;
-  modo = antesDaFicha || 'mapa'; antesDaFicha = null; aplicarCelular();
- });
- $('sheetHandle').addEventListener('pointerdown', e => {
-  if (!celular.matches || modo !== 'ficha') return;
-  e.preventDefault(); $('sheetHandle').setPointerCapture(e.pointerId);
-  const y0 = e.clientY, h0 = side.getBoundingClientRect().height, a = alturas();
-  let h = h0, moveu = false;
-  const mover = ev => { moveu = moveu || Math.abs(ev.clientY - y0) > 4; h = Math.min(Math.max(h0 + (y0 - ev.clientY), 80), a.cheia); side.classList.add('sem-animacao'); aplicarCelular(h); };
-  const soltar = () => {
-   $('sheetHandle').removeEventListener('pointermove', mover); side.classList.remove('sem-animacao');
-   if (!moveu) { altura = altura === 'meia' ? 'cheia' : 'meia'; aplicarCelular(); return; }
-   if (h < a.meia * 0.6) { ui().fecharFicha?.(); return; }
-   altura = Math.abs(h - a.meia) < Math.abs(h - a.cheia) ? 'meia' : 'cheia'; aplicarCelular();
-  };
-  $('sheetHandle').addEventListener('pointermove', mover);
-  $('sheetHandle').addEventListener('pointerup', soltar, { once: true });
-  $('sheetHandle').addEventListener('pointercancel', soltar, { once: true });
+  const lista = antesDaFicha === 'lista';
+  modo = lista ? 'lista' : 'mapa'; antesDaFicha = null; aplicarCelular();
+  if (lista) $('sideTitulo').textContent = TITULOS[document.querySelector('[role=tab][aria-selected=true]')?.id?.slice(2)] || '';
  });
 
  function aplicar() {
@@ -97,7 +85,7 @@
   else { root.style.removeProperty('--sheet-h'); aplicarComputador(); }
  }
  celular.addEventListener('change', aplicar);
- window.addEventListener('resize', () => { if (celular.matches) aplicarCelular(); else aplicarComputador(); });
+ window.addEventListener('resize', () => { if (celular.matches) refazerMapa(); else aplicarComputador(); });
  aplicar();
 
  // chegou pelo menu de outra tela: ?ver=prioridades | ?ver=registros

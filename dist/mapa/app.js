@@ -5,7 +5,7 @@
  const COR = { 1: '#2f9e6a', 2: '#d6a51c', 3: '#dd5a26', 4: '#a8243a' };
  const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
  const PERIODOS = [['30', 'Últimos 30 dias'], ['90', 'Últimos 90 dias'], ['365', 'Últimos 12 meses'], ['', 'Todo o histórico']];
- const state = { rows: [], areas: [], risks: null, area: '', period: '90', sel: null, first: true, exemplo: false, q: '', limit: 60 };
+ const state = { rows: [], areas: [], risks: null, area: '', period: '90', sel: null, first: true, exemplo: false, acoes: null, q: '', limit: 60 };
 
  function el(tag, attrs, ...kids) {
   const e = document.createElement(tag);
@@ -81,6 +81,7 @@
   catch { $('status').textContent = navigator.onLine ? 'Banco indisponível agora' : 'Sem conexão'; return; }
   state.exemplo = !!data.exemplo;
   state.rows = D.readTable(data.table).map(r => ({ ...r, area: areaOf(r.geo) }));
+  await loadAcoes();
   const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   $('status').textContent = (state.exemplo ? 'DADOS DE EXEMPLO · ' : '') + (state.rows.length ? 'Atualizado às ' + hora : 'Nenhuma avaliação registrada ainda');
   render();
@@ -93,7 +94,7 @@
  const EXEMPLO = new URLSearchParams(location.search).has('exemplo') || !CFG.supabaseUrl;
  const TIPO = { pessoas: 'Pessoas', fixo: 'Instalação / estrutura fixa alcançável', movel: 'Veículo / equipamento / bem móvel' };
  const SIT = { inicial: 'Exposição inicial', 'apos-controles': 'Exposição após os controles' };
- const CAB = ['ID da árvore', 'Unidade / setor / localização', 'Espécie', 'Componente avaliado', 'Local / alvo exposto', 'Tipo de alvo', 'Situação dos controles', 'Data e hora da inspeção', 'Geometria, alcance e ocupação', 'R registrado', 'Fotos'];
+ const CAB = ['ID da árvore', 'Unidade / setor / localização', 'Espécie', 'Componente avaliado', 'Local / alvo exposto', 'Tipo de alvo', 'Situação dos controles', 'Data e hora da inspeção', 'Geometria, alcance e ocupação', 'R registrado', 'Fotos', 'Código'];
  async function buscarHistorico() {
   if (EXEMPLO) { const r = await fetch('exemplo/historico.json', { cache: 'no-store' }); if (!r.ok) throw new Error('exemplo'); return r.json(); }
   const r = await fetch(CFG.supabaseUrl + '/rest/v1/inspecoes_publicas?select=*&order=inspecionado_em.desc&limit=20000', { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
@@ -102,7 +103,7 @@
   const local = iso => { const d = new Date(iso); return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
   const linhas = (await r.json()).map(x => [x.arvore_id, '', x.especie || '', x.componente, x.alvo, TIPO[x.tipo_alvo] || x.tipo_alvo, SIT[x.situacao_controles] || '',
    local(x.inspecionado_em), x.latitude != null ? 'Coordenadas da árvore (latitude, longitude): ' + x.latitude + '; ' + x.longitude : '', 'R' + x.r,
-   (x.fotos || []).map(id => id.includes('/') ? CFG.supabaseUrl + '/storage/v1/object/public/fotos/' + id.split('/').map(encodeURIComponent).join('/') + '_mini.jpg' : 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w1000').join(';')]);
+   (x.fotos || []).map(id => id.includes('/') ? CFG.supabaseUrl + '/storage/v1/object/public/fotos/' + id.split('/').map(encodeURIComponent).join('/') + '_mini.jpg' : 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w1000').join(';'), x.id]);
   return { table: [CAB, ...linhas], exemplo: false };
  }
  function gate(code) {
@@ -170,7 +171,7 @@
   const f = { risks: [1, 2, 3, 4], tests: false };
   if (state.period) f.start = new Date(Date.now() - Number(state.period) * 864e5).toISOString().slice(0, 10);
   const v = D.views(state.rows, f), byArea = r => !state.area || r.area === state.area, byRisk = r => !state.risks || state.risks.has(r.risk);
-  const all = v.points.filter(byArea), missing = v.missing.filter(byArea);
+  const all = v.points.filter(p => byArea(p) && !suprimida(p.id)), missing = v.missing.filter(byArea);
   const n = { 1: 0, 2: 0, 3: 0, 4: 0 };
   for (const p of all) if (n[p.risk] !== undefined) n[p.risk]++;
   const pts = all.filter(byRisk);
@@ -204,8 +205,9 @@
   const ptsByTree = new Map(all.map(p => [p.tree, p]));
   $('records').replaceChildren(...lista.slice(0, state.limit).map(r => {
    const p = ptsByTree.get(r.tree);
-   return el('li', {}, el('button', { type: 'button', disabled: p ? false : 'disabled', title: p ? 'Ver no mapa' : 'Sem coordenadas', on: () => p && select(p, true) },
-    r.photos?.[0] ? thumb(r.photos[0]) : el('span', { class: 'th vazio-th' }), el('span', { class: 'txt' }, el('strong', {}, r.id), el('small', {}, [r.area || 'Sem coordenadas', r.component, dataBR(r.stamp)].filter(Boolean).join(' · '))), riskTag(r.risk)));
+   const sup = suprimida(r.id);
+   return el('li', {}, el('button', { type: 'button', disabled: p ? false : 'disabled', title: p ? 'Ver no mapa' : sup ? 'Árvore suprimida (fora do mapa)' : 'Sem coordenadas', on: () => p && select(p, true) },
+    r.photos?.[0] ? thumb(r.photos[0]) : el('span', { class: 'th vazio-th' }), el('span', { class: 'txt' }, el('strong', {}, r.id), el('small', {}, [sup ? 'SUPRIMIDA' : '', r.area || 'Sem coordenadas', r.component, dataBR(r.stamp)].filter(Boolean).join(' · '))), riskTag(r.risk)));
   }));
   $('moreRecords').hidden = lista.length <= state.limit;
   $('recordsEmpty').hidden = lista.length > 0;
@@ -248,10 +250,65 @@
    const z = Math.max(map.getZoom(), 17);
    let alvo = L.latLng(p.geo.lat, p.geo.lon);
    // celular: a ficha cobre a metade de baixo, então a árvore fica no centro da parte visível
-   if (matchMedia('(max-width: 768px)').matches) alvo = map.unproject(map.project(alvo, z).add([0, window.innerHeight * 0.25]), z);
    map.flyTo(alvo, z, { duration: .6 });
   }
   render();
+ }
+ // ação da árvore (SQL 04): aberta -> botão Dar baixa; com baixa -> o que foi feito
+ const TIPO_ACAO = { poda: 'Poda', poda_drastica: 'Poda drástica', supressao: 'Supressão' };
+ function blocoAcao(p) {
+  const ex = state.exemplo ? '?exemplo' : '', id = encodeURIComponent(p.id);
+  const a = state.acoes ? state.acoes.get(p.id) : null;
+  const reavaliar = el('a', { class: a?.status === 'concluida' ? 'cta' : 'cta sec', href: 'avaliar/?arvore=' + id }, 'Reavaliar');
+  if (a?.status === 'concluida') {
+   const d = a.concluida ? new Date(a.concluida).toLocaleDateString('pt-BR') : '';
+   return el('div', { class: 'acoes' }, el('p', { class: 'acao-feita' }, el('b', {}, 'Ação com baixa: ' + (TIPO_ACAO[a.tipo] || '')), ' em ' + d + (a.responsavel ? ' por ' + a.responsavel : '')),
+    el('a', { class: 'cta sec', href: 'acoes/?arvore=' + id + (ex ? '&exemplo' : '') }, 'Ver ação'), reavaliar);
+  }
+  if (a?.status === 'aberta' || state.exemplo) return el('div', { class: 'acoes' }, el('p', { class: 'acao-aberta' }, el('b', {}, 'Ação aberta'), ' · falta dar baixa (poda, poda drástica ou supressão)'),
+   el('a', { class: 'cta', href: 'acoes/?arvore=' + id + (ex ? '&exemplo' : '') }, 'Dar baixa na ação'), reavaliar);
+  return el('div', { class: 'acoes' }, el('a', { class: 'cta', href: 'avaliar/?arvore=' + id }, 'Reavaliar esta árvore'));
+ }
+ function suprimida(id) { const a = state.acoes?.get(id); return a?.status === 'concluida' && a.tipo === 'supressao'; }
+
+ // ---------- excluir uma avaliação (SQL 05) ----------
+ let excluindo = null;
+ function pedirExclusao(r) {
+  excluindo = r;
+  const f = $('exForm'); f.reset();
+  try { f.elements.responsavel.value = localStorage.getItem('arvores-responsavel-baixa') || ''; } catch { /* nada */ }
+  $('exTexto').textContent = 'Árvore ' + r.id + ' · avaliação de ' + dataBR(r.stamp) + ' · R' + r.risk + (r.component ? ' · ' + r.component : '');
+  $('exErro').hidden = true; $('exOk').disabled = false; $('exOk').textContent = 'Excluir';
+  $('exDlg').showModal();
+ }
+ $('exCancelar').addEventListener('click', () => $('exDlg').close());
+ $('exForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = $('exForm'), motivo = f.elements.motivo.value.trim(), resp = f.elements.responsavel.value.trim();
+  const falha = t => { $('exErro').textContent = t; $('exErro').hidden = false; };
+  if (motivo.length < 3) return falha('Escreva o motivo da exclusão.');
+  if (resp.length < 3) return falha('Informe quem está excluindo.');
+  try { localStorage.setItem('arvores-responsavel-baixa', resp); } catch { /* nada */ }
+  $('exOk').disabled = true; $('exOk').textContent = 'Excluindo…';
+  try {
+   const r = await fetch(CFG.supabaseUrl + '/rest/v1/rpc/excluir_inspecao', { method: 'POST', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_id: excluindo.insp, p_motivo: motivo, p_responsavel: resp }) });
+   const j = await r.json().catch(() => null);
+   if (!r.ok) throw new Error(j?.message || 'Erro ' + r.status);
+  } catch (x) { $('exOk').disabled = false; $('exOk').textContent = 'Excluir'; return falha(navigator.onLine ? 'Não foi possível excluir: ' + x.message : 'Sem conexão. Tente de novo com internet.'); }
+  $('exDlg').close();
+  await loadHistory();
+ });
+
+ async function loadAcoes() {
+  if (EXEMPLO) return;
+  try {
+   const r = await fetch(CFG.supabaseUrl + '/rest/v1/acoes_publicas?select=arvore_id,status,tipo,concluida_em,responsavel,inspecionado_em&status=neq.substituida&order=inspecionado_em.desc&limit=20000', { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
+   if (!r.ok) return;
+   const m = new Map();
+   for (const x of await r.json()) if (!m.has(x.arvore_id)) m.set(x.arvore_id, { status: x.status, tipo: x.tipo, concluida: x.concluida_em, responsavel: x.responsavel });
+   state.acoes = m;
+  } catch { /* sem ações: fica só o Reavaliar */ }
  }
  function closeSel() { state.sel = null; $('sel').hidden = true; showTab(abaAtual); window.dispatchEvent(new CustomEvent('arvore-fechada')); }
  function ficha(p) {
@@ -262,8 +319,10 @@
    el('div', { class: 'h' }, el('b', {}, p.id), riskTag(p.risk), el('button', { class: 'x', type: 'button', 'aria-label': 'Fechar', on: () => { closeSel(); render(); } }, '×')),
    galeria(p.tree),
    dl,
-   hist.length > 1 ? el('div', { class: 'hist' }, el('div', {}, el('b', {}, 'Histórico')), ...hist.slice(0, 5).map(r => el('div', {}, el('span', {}, dataBR(r.stamp) + ' · ' + (r.component || '')), el('span', {}, 'R' + r.risk)))) : null,
-   el('div', { class: 'acoes' }, el('a', { class: 'cta', href: 'avaliar/?arvore=' + encodeURIComponent(p.id) }, 'Reavaliar esta árvore'))].filter(Boolean));
+   el('div', { class: 'hist' }, el('div', { class: 'hist-t' }, el('b', {}, 'Avaliações desta árvore (' + hist.length + ')')),
+    ...hist.map(r => el('div', {}, el('span', {}, dataBR(r.stamp) + ' · ' + (r.component || '')), el('span', { class: 'hist-d' }, 'R' + r.risk,
+     r.insp ? el('button', { type: 'button', class: 'excluir', 'aria-label': 'Excluir a avaliação de ' + dataBR(r.stamp), on: () => pedirExclusao(r) }, 'Excluir') : null)))),
+   blocoAcao(p)].filter(Boolean));
   $('sel').hidden = false;
   showTab(abaAtual);
  }
