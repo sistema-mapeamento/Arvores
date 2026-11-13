@@ -6,8 +6,9 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://vzukefbkvkkvkfijuduu.supabase.co; img-src 'self' data: blob: https://server.arcgisonline.com https://services.arcgisonline.com https://vzukefbkvkkvkfijuduu.supabase.co https://drive.google.com https://*.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Árvores | Usiminas Ipatinga</title>
 <link rel="icon" href="icone.svg" type="image/svg+xml">
-<link rel="stylesheet" href="libs/leaflet.css"><link rel="stylesheet" href="mapa/style.css?v=17"><link rel="stylesheet" href="menu.css?v=2">
-<script src="atualizar.js?v=1" data-base="./"></script><script src="config.js?v=15"></script><script src="libs/leaflet.js" defer></script><script src="mapa/data.js?v=16" defer></script><script src="mapa/app.js?v=17" defer></script><script src="mapa/painel.js?v=16" defer></script><script src="menu.js?v=2" data-base="./" data-tela="mapa" defer></script>
+<link rel="preconnect" href="https://vzukefbkvkkvkfijuduu.supabase.co" crossorigin><link rel="preload" href="dados/cercas.geojson" as="fetch" crossorigin>
+<link rel="stylesheet" href="libs/leaflet.css"><link rel="stylesheet" href="mapa/style.css?v=18"><link rel="stylesheet" href="menu.css?v=2">
+<script src="atualizar.js?v=1" data-base="./"></script><script src="config.js?v=15"></script><script src="mapa/cedo.js?v=1"></script><script src="libs/leaflet.js" defer></script><script src="mapa/data.js?v=16" defer></script><script src="mapa/app.js?v=19" defer></script><script src="mapa/painel.js?v=16" defer></script><script src="menu.js?v=2" data-base="./" data-tela="mapa" defer></script>
 </head>
 <body>
 <header class="bar">
@@ -27,6 +28,7 @@
 <main class="main" id="main">
  <section class="mapWrap" aria-label="Mapa">
   <div id="map"></div>
+  <div class="carregando" id="carregando" role="status"><i></i>Carregando árvores…</div>
   <div class="filtro">
    <button type="button" class="fbtn" id="filterBtn" aria-expanded="false" aria-controls="filterPop">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8L3 5z"/></svg>

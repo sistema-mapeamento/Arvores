@@ -202,3 +202,9 @@ button,select,input{font:inherit;color:inherit}
  .tabpanel{padding:12px 12px 24px}
  .lista li button{min-height:64px}
 }
+
+/* aviso de carregando por cima do mapa (13/11) */
+.carregando{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:600;display:flex;align-items:center;gap:8px;background:rgba(15,26,21,.86);color:#fff;font-size:13px;font-weight:600;padding:8px 14px;border-radius:99px;pointer-events:none}
+.carregando i{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:girar .8s linear infinite}
+@keyframes girar{to{transform:rotate(360deg)}}
+@media (max-width:768px){.carregando{top:68px}}

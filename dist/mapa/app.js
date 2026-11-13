@@ -74,20 +74,38 @@
   if (plantBounds && state.first) map.fitBounds(plantBounds, { padding: [10, 10] });
  }
 
- async function loadHistory() {
-  $('status').textContent = 'Atualizando…';
-  let data;
-  try { data = await buscarHistorico(); }
-  catch { $('status').textContent = navigator.onLine ? 'Banco indisponível agora' : 'Sem conexão'; return; }
+ // Abertura rápida (13/11): avaliações e ações vêm juntas (em paralelo) e a última cópia fica guardada
+ // neste aparelho; ao abrir, a cópia aparece na hora e o banco atualiza por cima, sem tela vazia.
+ const CACHE = 'arvores-cache-mapa-v1';
+ let abriuHash = false;
+ function aplicarDados(data, acoes, quando) {
   state.exemplo = !!data.exemplo;
   state.rows = D.readTable(data.table).map(r => ({ ...r, area: areaOf(r.geo) }));
-  await loadAcoes();
-  const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  state.acoes = acoes;
+  const hora = new Date(quando).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   $('status').textContent = (state.exemplo ? 'DADOS DE EXEMPLO · ' : '') + (state.rows.length ? 'Atualizado às ' + hora : 'Nenhuma avaliação registrada ainda');
   render();
-  // link direto para uma árvore: /#ARV-0130
+  $('carregando').hidden = true;
+  // link direto para uma árvore: /#ARV-00001
   const alvo = decodeURIComponent(location.hash.slice(1));
-  if (alvo && !state.sel) { const p = D.views(state.rows, { risks: [1, 2, 3, 4] }).points.find(x => x.id === alvo); if (p) select(p, true); }
+  if (alvo && !abriuHash && !state.sel) { const p = D.views(state.rows, { risks: [1, 2, 3, 4] }).points.find(x => x.id === alvo); if (p) { abriuHash = true; select(p, true); } }
+ }
+ const buscarTudo = () => Promise.all([buscarHistorico(), loadAcoes()]);
+ function lerCache() {
+  if (EXEMPLO) return null;
+  try { const c = JSON.parse(localStorage.getItem(CACHE) || 'null'); return c?.data?.table ? c : null; } catch { return null; }
+ }
+ function salvarCache(data, acoes) {
+  if (EXEMPLO) return;
+  try { const t = JSON.stringify({ data, acoes: acoes ? [...acoes] : null, quando: Date.now() }); if (t.length < 3e6) localStorage.setItem(CACHE, t); } catch { /* sem espaço */ }
+ }
+ async function loadHistory(pronto) {
+  if (!state.rows.length) $('status').textContent = 'Carregando…';
+  let data, acoes;
+  try { [data, acoes] = await (pronto || buscarTudo()); }
+  catch { $('carregando').hidden = true; $('status').textContent = state.rows.length ? 'Sem conexão · mostrando a última cópia' : navigator.onLine ? 'Banco indisponível agora' : 'Sem conexão'; return; }
+  aplicarDados(data, acoes, Date.now());
+  salvarCache(data, acoes);
  }
  // histórico: banco Supabase (público) ou dados de exemplo (?exemplo)
  const CFG = window.ARVORES_CONFIG || {};
@@ -97,11 +115,15 @@
  const CAB = ['ID da árvore', 'Unidade / setor / localização', 'Espécie', 'Componente avaliado', 'Local / alvo exposto', 'Tipo de alvo', 'Situação dos controles', 'Data e hora da inspeção', 'Geometria, alcance e ocupação', 'R registrado', 'Fotos', 'Código'];
  async function buscarHistorico() {
   if (EXEMPLO) { const r = await fetch('exemplo/historico.json', { cache: 'no-store' }); if (!r.ok) throw new Error('exemplo'); return r.json(); }
-  const r = await fetch(CFG.supabaseUrl + '/rest/v1/inspecoes_publicas?select=*&order=inspecionado_em.desc&limit=20000', { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
-  if (!r.ok) throw new Error('banco ' + r.status);
+  const cedo = window.ARVORES_CEDO?.historico; if (window.ARVORES_CEDO) window.ARVORES_CEDO.historico = null;   // busca já começada (mapa/cedo.js), usada uma vez
+  const lista = cedo ? await cedo : await (async () => {
+   const r = await fetch(CFG.supabaseUrl + '/rest/v1/inspecoes_publicas?select=*&order=inspecionado_em.desc&limit=20000', { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
+   if (!r.ok) throw new Error('banco ' + r.status);
+   return r.json();
+  })();
   const p2 = n => String(n).padStart(2, '0');
   const local = iso => { const d = new Date(iso); return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
-  const linhas = (await r.json()).map(x => [x.arvore_id, '', x.especie || '', x.componente, x.alvo, TIPO[x.tipo_alvo] || x.tipo_alvo, SIT[x.situacao_controles] || '',
+  const linhas = lista.map(x => [x.arvore_id, '', x.especie || '', x.componente, x.alvo, TIPO[x.tipo_alvo] || x.tipo_alvo, SIT[x.situacao_controles] || '',
    local(x.inspecionado_em), x.latitude != null ? 'Coordenadas da árvore (latitude, longitude): ' + x.latitude + '; ' + x.longitude : '', 'R' + x.r,
    (x.fotos || []).map(id => id.includes('/') ? CFG.supabaseUrl + '/storage/v1/object/public/fotos/' + id.split('/').map(encodeURIComponent).join('/') + '_mini.jpg' : 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w1000').join(';'), x.id]);
   return { table: [CAB, ...linhas], exemplo: false };
@@ -300,15 +322,19 @@
   await loadHistory();
  });
 
- async function loadAcoes() {
-  if (EXEMPLO) return;
+ async function loadAcoes() {   // devolve o mapa árvore -> ação (ou null)
+  if (EXEMPLO) return null;
   try {
-   const r = await fetch(CFG.supabaseUrl + '/rest/v1/acoes_publicas?select=arvore_id,status,tipo,concluida_em,responsavel,inspecionado_em&status=neq.substituida&order=inspecionado_em.desc&limit=20000', { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
-   if (!r.ok) return;
+   const cedo = window.ARVORES_CEDO?.acoes; if (window.ARVORES_CEDO) window.ARVORES_CEDO.acoes = null;
+   const lista = cedo ? await cedo : await (async () => {
+    const r = await fetch(CFG.supabaseUrl + '/rest/v1/acoes_publicas?select=arvore_id,status,tipo,concluida_em,responsavel,inspecionado_em&status=neq.substituida&order=inspecionado_em.desc&limit=20000', { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
+    if (!r.ok) throw new Error('banco ' + r.status);
+    return r.json();
+   })();
    const m = new Map();
-   for (const x of await r.json()) if (!m.has(x.arvore_id)) m.set(x.arvore_id, { status: x.status, tipo: x.tipo, concluida: x.concluida_em, responsavel: x.responsavel });
-   state.acoes = m;
-  } catch { /* sem ações: fica só o Reavaliar */ }
+   for (const x of lista) if (!m.has(x.arvore_id)) m.set(x.arvore_id, { status: x.status, tipo: x.tipo, concluida: x.concluida_em, responsavel: x.responsavel });
+   return m;
+  } catch { return null; }   // sem ações: fica só o Reavaliar
  }
  function closeSel() { state.sel = null; $('sel').hidden = true; showTab(abaAtual); window.dispatchEvent(new CustomEvent('arvore-fechada')); }
  function ficha(p) {
@@ -332,6 +358,11 @@
  if (new URLSearchParams(location.search).has('exemplo')) for (const a of document.querySelectorAll('.nav a, .logo')) { const h = a.getAttribute('href'); if (h && !h.includes('?')) a.setAttribute('href', h + '?exemplo'); }
  window.TreeMapaRef = map;
  window.TreeMapaUI = { aba: showTab, fecharFicha: () => { if (state.sel) { closeSel(); render(); } } };
- loadFences().catch(e => { if (e.status === 401 || e.status === 403) gate(e.status); }).finally(loadHistory);
+ const rede = buscarTudo(); rede.catch(() => { /* tratado no loadHistory */ });   // começa a buscar já, junto com as cercas
+ loadFences().catch(e => { if (e.status === 401 || e.status === 403) gate(e.status); }).finally(() => {
+  const c = lerCache();
+  if (c) aplicarDados(c.data, c.acoes ? new Map(c.acoes) : null, c.quando);
+  loadHistory(rede);
+ });
  setInterval(() => { if (!document.hidden && $('gate').hidden) loadHistory(); }, 5 * 60 * 1000);
 })();

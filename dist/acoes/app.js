@@ -308,10 +308,10 @@
  $('busca').addEventListener('input', () => { state.q = $('busca').value; state.limite = 40; render(); });
  $('mais').addEventListener('click', () => { state.limite += 40; render(); });
 
- async function atualizar() {
+ async function atualizar(pronto) {
   $('status').textContent = 'Atualizando…';
   try {
-   const novas = await carregar();
+   const novas = await (pronto || carregar());
    const locais = new Map(state.acoes.map(a => [a.id, a]));
    state.acoes = novas.map(a => EXEMPLO && locais.get(a.id)?.status === 'concluida' ? locais.get(a.id) : { ...a, area: areaDe(a.lat, a.lon) });
    $('status').textContent = (EXEMPLO ? 'DADOS DE EXEMPLO · ' : '') + 'Atualizado às ' + horaBR(new Date());
@@ -321,8 +321,9 @@
   render();
  }
  async function iniciar() {
+  const p = carregar(); p.catch(() => { /* tratado no atualizar */ });   // busca as ações junto com as cercas
   await carregarAreas();
-  await atualizar();
+  await atualizar(p);
   const arv = PARAMS.get('arvore'), nova = PARAMS.has('nova');
   if (arv) {
    const a = state.acoes.find(x => x.arvore === arv && x.status === 'aberta');

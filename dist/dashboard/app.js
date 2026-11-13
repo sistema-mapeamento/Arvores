@@ -45,11 +45,18 @@
     return { id: r[0], quando: new Date(+y, mo - 1, +d, +h || 0, +mi || 0), r: +String(r[9]).slice(1), f: null, comp: r[3], alvo: r[4], tipo: TIPO[r[5]] || r[5], lat: m ? +m[1] : null, lon: m ? +m[2] : null };
    });
   }
-  const r = await fetch(CFG.supabaseUrl + '/rest/v1/inspecoes_publicas?select=arvore_id,inspecionado_em,r,f,componente,alvo,tipo_alvo,latitude,longitude&order=inspecionado_em.desc&limit=20000',
-   { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
-  if (!r.ok) throw new Error('banco ' + r.status);
-  return (await r.json()).map(x => ({ id: x.arvore_id, quando: new Date(x.inspecionado_em), r: x.r, f: x.f, comp: x.componente, alvo: x.alvo, tipo: x.tipo_alvo, lat: x.latitude, lon: x.longitude }));
+  return mapDados(await buscar('inspecoes_publicas?select=arvore_id,inspecionado_em,r,f,componente,alvo,tipo_alvo,latitude,longitude&order=inspecionado_em.desc&limit=20000'));
  }
+ // Abertura rápida (13/11): busca tudo em paralelo e guarda a última cópia; ao abrir mostra a cópia na hora.
+ const CACHE = 'arvores-cache-dash-v1';
+ async function buscar(caminho) {
+  const r = await fetch(CFG.supabaseUrl + '/rest/v1/' + caminho, { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
+  if (!r.ok) throw new Error('banco ' + r.status);
+  return r.json();
+ }
+ const mapDados = j => j.map(x => ({ id: x.arvore_id, quando: new Date(x.inspecionado_em), r: x.r, f: x.f, comp: x.componente, alvo: x.alvo, tipo: x.tipo_alvo, lat: x.latitude, lon: x.longitude }));
+ const mapAcoes = j => j ? j.map(x => ({ arvore: x.arvore_id, status: x.status, tipo: x.tipo, concluida: x.concluida_em ? new Date(x.concluida_em) : null,
+  criada: new Date(x.criado_em), avaliada: new Date(x.inspecionado_em), r: x.r, lat: x.latitude, area: areaDe(x.latitude, x.longitude) })) : null;
 
  // ações (SQL 04). Exemplo: 1 ação aberta por árvore (a última avaliação).
  async function carregarAcoes() {
@@ -57,11 +64,7 @@
    const ult = new Map(); for (const x of dados) { const a = ult.get(x.id); if (!a || x.quando > a.quando) ult.set(x.id, x); }
    return [...ult.values()].map(x => ({ arvore: x.id, status: 'aberta', tipo: null, concluida: null, criada: x.quando, avaliada: x.quando, r: x.r, area: x.area, lat: x.lat }));
   }
-  const r = await fetch(CFG.supabaseUrl + '/rest/v1/acoes_publicas?select=arvore_id,status,tipo,concluida_em,criado_em,inspecionado_em,r,latitude,longitude&status=neq.substituida&limit=20000',
-   { cache: 'no-store', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
-  if (!r.ok) return null;
-  return (await r.json()).map(x => ({ arvore: x.arvore_id, status: x.status, tipo: x.tipo, concluida: x.concluida_em ? new Date(x.concluida_em) : null,
-   criada: new Date(x.criado_em), avaliada: new Date(x.inspecionado_em), r: x.r, lat: x.latitude, area: areaDe(x.latitude, x.longitude) }));
+  return null;
  }
  function renderAcoes(inicio, area) {
   $('acoesAviso').hidden = !!acoes;
@@ -155,17 +158,35 @@
   renderAcoes(inicio, area);
  }
 
+ function mostrar(d, a, quando) {
+  dados = d.map(x => ({ ...x, area: areaDe(x.lat, x.lon) }));
+  acoes = a;
+  const nomes = [...new Set(dados.map(x => x.area).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'pt-BR'));
+  const sel = $('area').value;
+  $('area').replaceChildren(el('option', { value: '' }, 'Todas as áreas'), ...nomes.map(n => el('option', { value: n }, n)));
+  if (sel && nomes.includes(sel)) $('area').value = sel;
+  const hora = new Date(quando).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  $('status').textContent = (EXEMPLO ? 'DADOS DE EXEMPLO · ' : '') + (dados.length ? 'Atualizado às ' + hora : 'Nenhuma avaliação registrada ainda');
+  render();
+ }
  async function iniciar() {
+  if (EXEMPLO) {
+   try { await carregarAreas(); const d = await carregar(); dados = d.map(x => ({ ...x, area: areaDe(x.lat, x.lon) })); mostrar(d, await carregarAcoes(), Date.now()); }
+   catch { $('status').textContent = 'Sem conexão'; }
+   return;
+  }
+  // as 3 buscas saem juntas
+  const pD = buscar('inspecoes_publicas?select=arvore_id,inspecionado_em,r,f,componente,alvo,tipo_alvo,latitude,longitude&order=inspecionado_em.desc&limit=20000');
+  const pA = buscar('acoes_publicas?select=arvore_id,status,tipo,concluida_em,criado_em,inspecionado_em,r,latitude,longitude&status=neq.substituida&limit=20000').catch(() => null);
+  pD.catch(() => { /* tratado abaixo */ });
+  await carregarAreas().catch(() => { /* sem cercas: sem nome de área */ });
+  let c = null; try { c = JSON.parse(localStorage.getItem(CACHE) || 'null'); } catch { /* nada */ }
+  if (c?.d) mostrar(mapDados(c.d), mapAcoes(c.a), c.quando);
   try {
-   await carregarAreas();
-   dados = (await carregar()).map(x => ({ ...x, area: areaDe(x.lat, x.lon) }));
-   acoes = await carregarAcoes().catch(() => null);
-   const nomes = [...new Set(dados.map(x => x.area).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-   $('area').append(...nomes.map(n => el('option', { value: n }, n)));
-   const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-   $('status').textContent = (EXEMPLO ? 'DADOS DE EXEMPLO · ' : '') + (dados.length ? 'Atualizado às ' + hora : 'Nenhuma avaliação registrada ainda');
-   render();
-  } catch { $('status').textContent = navigator.onLine ? 'Banco indisponível agora' : 'Sem conexão'; }
+   const [d, a] = await Promise.all([pD, pA]);
+   mostrar(mapDados(d), mapAcoes(a), Date.now());
+   try { const t = JSON.stringify({ d, a, quando: Date.now() }); if (t.length < 3e6) localStorage.setItem(CACHE, t); } catch { /* sem espaço */ }
+  } catch { $('status').textContent = c ? 'Sem conexão · mostrando a última cópia' : navigator.onLine ? 'Banco indisponível agora' : 'Sem conexão'; }
  }
 
  // modo exemplo continua ao trocar de tela
