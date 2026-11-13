@@ -244,10 +244,16 @@
   state.sel = p.tree;
   $('filterPop').hidden = true; $('filterBtn').setAttribute('aria-expanded', 'false');
   window.dispatchEvent(new CustomEvent('arvore-aberta'));
-  if (fly) map.flyTo([p.geo.lat, p.geo.lon], Math.max(map.getZoom(), 17), { duration: .6 });
+  if (fly) {
+   const z = Math.max(map.getZoom(), 17);
+   let alvo = L.latLng(p.geo.lat, p.geo.lon);
+   // celular: a ficha cobre a metade de baixo, então a árvore fica no centro da parte visível
+   if (matchMedia('(max-width: 768px)').matches) alvo = map.unproject(map.project(alvo, z).add([0, window.innerHeight * 0.25]), z);
+   map.flyTo(alvo, z, { duration: .6 });
+  }
   render();
  }
- function closeSel() { state.sel = null; $('sel').hidden = true; showTab(abaAtual); }
+ function closeSel() { state.sel = null; $('sel').hidden = true; showTab(abaAtual); window.dispatchEvent(new CustomEvent('arvore-fechada')); }
  function ficha(p) {
   const hist = state.rows.filter(r => r.tree === p.tree).sort((a, b) => (b.stamp || '').localeCompare(a.stamp || ''));
   const dl = el('table', { class: 'dados' }, el('tbody', {}, ...[['Área', p.area], ['Local / alvo', p.target], ['Componente', p.component], ['Espécie', p.species], ['Tipo de alvo', p.type], ['Última inspeção', dataBR(p.stamp)], ['Inspeções', String(hist.length)]]
@@ -266,6 +272,7 @@
  // modo exemplo continua ao trocar de tela
  if (new URLSearchParams(location.search).has('exemplo')) for (const a of document.querySelectorAll('.nav a, .logo')) { const h = a.getAttribute('href'); if (h && !h.includes('?')) a.setAttribute('href', h + '?exemplo'); }
  window.TreeMapaRef = map;
+ window.TreeMapaUI = { aba: showTab, fecharFicha: () => { if (state.sel) { closeSel(); render(); } } };
  loadFences().catch(e => { if (e.status === 401 || e.status === 403) gate(e.status); }).finally(loadHistory);
  setInterval(() => { if (!document.hidden && $('gate').hidden) loadHistory(); }, 5 * 60 * 1000);
 })();

@@ -6,8 +6,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://vzukefbkvkkvkfijuduu.supabase.co; img-src 'self' data: blob: https://server.arcgisonline.com https://services.arcgisonline.com https://vzukefbkvkkvkfijuduu.supabase.co https://drive.google.com https://*.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>Árvores | Usiminas Ipatinga</title>
 <link rel="icon" href="icone.svg" type="image/svg+xml">
-<link rel="stylesheet" href="libs/leaflet.css"><link rel="stylesheet" href="mapa/style.css?v=12">
-<script src="config.js?v=12"></script><script src="libs/leaflet.js" defer></script><script src="mapa/data.js?v=12" defer></script><script src="mapa/app.js?v=12" defer></script><script src="mapa/painel.js?v=12" defer></script>
+<link rel="stylesheet" href="libs/leaflet.css"><link rel="stylesheet" href="mapa/style.css?v=15"><link rel="stylesheet" href="menu.css?v=1">
+<script src="config.js?v=15"></script><script src="libs/leaflet.js" defer></script><script src="mapa/data.js?v=15" defer></script><script src="mapa/app.js?v=15" defer></script><script src="mapa/painel.js?v=15" defer></script><script src="menu.js?v=1" data-base="./" data-tela="mapa" defer></script>
 </head>
 <body>
 <header class="bar">
@@ -41,6 +41,7 @@
  <aside class="side" id="side" aria-label="Painel lateral">
   <div class="resizer" id="resizer" title="Arraste para alargar ou estreitar" aria-hidden="true"></div>
   <div class="sheet-handle" id="sheetHandle" aria-hidden="true"><span></span></div>
+  <div class="side-head" id="sideHead"><button type="button" id="sideVoltar" aria-label="Voltar ao mapa"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Mapa</button><h2 id="sideTitulo">Prioridades</h2></div>
   <div class="side-top">
    <div class="tabs" id="tabsBar" role="tablist" aria-label="Painel">
     <button type="button" role="tab" id="t-prioridades" aria-controls="p-prioridades" aria-selected="true">Prioridades <b id="prioCount">0</b></button>

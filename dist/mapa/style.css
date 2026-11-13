@@ -147,36 +147,39 @@ button,select,input{font:inherit;color:inherit}
 @media (max-width:1100px){.status{display:none}.nav a span{display:none}.nav a{padding:8px 10px}.nav{margin-left:auto}}
 
 /* ===== celular ===== */
+.side-head{display:none}
 @media (max-width:768px){
  :root{--bar-h:56px}
  .bar{gap:8px;padding:0 10px 0 12px}
  .logo{gap:9px;font-size:14px}
  .logo i{width:32px;height:32px}
  .logo small{display:none}
- .nav a{padding:9px;border-radius:9px}
- .nav a[aria-current]{display:none}
- .cta{padding:10px 13px;font-size:14px;min-height:40px}
+ .nav{display:none}
+ .cta{padding:10px 13px;font-size:14px;min-height:42px;margin-left:auto}
  .cta-l{display:none}.cta-s{display:inline}
  .main{display:block}
  .mapWrap{position:absolute;inset:0}
- /* gaveta */
- .side{position:fixed;left:0;right:0;bottom:0;height:calc(var(--sheet-h) + var(--safe-b));z-index:800;border:0;border-radius:18px 18px 0 0;box-shadow:0 -10px 30px -10px rgba(0,0,0,.35);transition:height .22s ease;padding-bottom:var(--safe-b)}
+ /* painel: escondido no modo mapa */
+ .side{display:none;position:fixed;left:0;right:0;bottom:0;z-index:1200;border:0;background:#fff;padding-bottom:var(--safe-b)}
+ .resizer,.side-top,.abrirPainel,.recolher{display:none!important}
+ /* Prioridades / Registros em tela própria */
+ .side[data-modo="lista"]{display:flex;top:var(--bar-h);border-radius:0}
+ .side[data-modo="lista"] .side-head{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);flex:none;background:#fff}
+ .side-head button{display:inline-flex;align-items:center;gap:4px;border:0;background:var(--soft);border-radius:10px;padding:9px 12px 9px 8px;font-weight:600;font-size:14px;color:var(--ink);min-height:42px;cursor:pointer}
+ .side-head h2{margin:0 0 0 6px;font-size:17px}
+ /* ficha por baixo do mapa */
+ .side[data-modo="ficha"]{display:flex;height:calc(var(--sheet-h) + var(--safe-b));border-radius:18px 18px 0 0;box-shadow:0 -10px 30px -10px rgba(0,0,0,.35);transition:height .22s ease}
  .side.sem-animacao{transition:none}
- .resizer{display:none}
- .sheet-handle{display:flex;justify-content:center;align-items:center;height:26px;flex:none;cursor:grab;touch-action:none}
- .sheet-handle span{width:44px;height:5px;border-radius:99px;background:#cfd6d1}
- .side-top{padding:0 6px 0 10px}
- .tabs button{padding:8px 2px 10px;font-size:13.5px}
- .recolher svg{transform:rotate(90deg)}
- .side[data-gaveta="fechada"] .side-body{visibility:hidden}
- .abrirPainel{display:none!important}
- /* controles do mapa acima da gaveta */
- .legend{bottom:calc(var(--sheet-h) + 10px);left:10px;gap:8px;font-size:11px;padding:5px 9px;transition:bottom .22s ease}
- .leaflet-bottom{bottom:calc(var(--sheet-h) + 4px);transition:bottom .22s ease}
+ .side[data-modo="ficha"] .sheet-handle{display:flex;justify-content:center;align-items:center;height:28px;flex:none;cursor:grab;touch-action:none}
+ .sheet-handle span{width:46px;height:5px;border-radius:99px;background:#cfd6d1}
+ /* controles do mapa acima da ficha */
+ .legend{bottom:calc(var(--sheet-h) + 12px + var(--safe-b));left:10px;gap:8px;font-size:11px;padding:5px 9px;transition:bottom .22s ease}
+ .leaflet-bottom{bottom:calc(var(--sheet-h) + 6px + var(--safe-b));transition:bottom .22s ease}
  .leaflet-control-attribution{display:none}
  .filtro{left:10px;top:10px}
- .pop{max-height:calc(100vh - var(--sheet-h) - 120px)}
- .ficha{margin:8px 10px 12px}
+ .pop{max-height:calc(100vh - 140px)}
+ .ficha{margin:0 10px 12px;box-shadow:none}
  .gal .big img{height:200px}
- .tabpanel{padding:10px 12px 20px}
+ .tabpanel{padding:12px 12px 24px}
+ .lista li button{min-height:64px}
 }

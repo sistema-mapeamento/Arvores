@@ -112,8 +112,8 @@ main.wrap{max-width:none!important;padding:0 24px!important}
  body{padding-bottom:env(safe-area-inset-bottom,0px)}
  .abar{position:sticky;top:0;z-index:60;min-height:56px;padding:0 10px 0 12px;gap:8px;margin-bottom:0}
  .alogo{font-size:14px}.alogo i{width:32px;height:32px}.alogo small{display:none}
- .anav{display:flex!important;margin-left:auto}.anav a{padding:9px 10px;font-size:13px}
- .acta{margin-left:0;padding:10px 12px;font-size:14px}
+ .anav{display:none!important}
+ .acta{margin-left:auto;padding:10px 12px;font-size:14px}
  main.wrap{padding:0 0 24px!important}
  .workspace{display:flex!important;flex-direction:column;gap:0!important}
  /* resultado sempre visível, fino, colado no topo */

@@ -1,0 +1,23 @@
+/* Menu lateral do celular (12/11/2026). Só aparece até 768 px de largura. */
+.menu-btn{display:none;flex:none;width:42px;height:42px;border:0;border-radius:10px;background:rgba(255,255,255,.1);color:#fff;place-items:center;cursor:pointer}
+.menu-btn:active{background:rgba(255,255,255,.2)}
+.menu-fundo{position:fixed;inset:0;background:rgba(6,14,11,.5);z-index:1990}
+.menu-gaveta{position:fixed;top:0;right:0;bottom:0;width:min(86vw,330px);background:#fff;z-index:2000;display:flex;flex-direction:column;box-shadow:-16px 0 40px -10px rgba(0,0,0,.4);transform:translateX(100%);transition:transform .22s ease;padding-bottom:env(safe-area-inset-bottom,0px);font-family:"Segoe UI",Inter,system-ui,-apple-system,sans-serif}
+.menu-gaveta.aberta{transform:none}
+.menu-cab{display:flex;flex-direction:column;padding:18px 18px 14px;background:#0f2a21;color:#fff;position:relative}
+.menu-cab b{font-size:16px}
+.menu-cab small{font-size:12px;opacity:.65}
+.menu-fechar{position:absolute;right:10px;top:10px;width:40px;height:40px;border:0;border-radius:10px;background:rgba(255,255,255,.1);color:#fff;font-size:24px;line-height:1;cursor:pointer}
+.menu-gaveta ul{list-style:none;margin:0;padding:10px;display:flex;flex-direction:column;gap:4px;overflow:auto}
+.menu-gaveta a{display:flex;align-items:center;gap:14px;padding:13px 12px;border-radius:12px;text-decoration:none;color:#14211c;min-height:60px}
+.menu-gaveta a svg{flex:none;color:#2f7a5b}
+.menu-gaveta a span{display:flex;flex-direction:column;min-width:0}
+.menu-gaveta a b{font-size:15px;font-weight:650}
+.menu-gaveta a small{font-size:12px;color:#7a877f}
+.menu-gaveta a:active{background:#f1f5f2}
+.menu-gaveta a[aria-current]{background:#eaf2ed}
+.menu-gaveta a[aria-current] b{color:#163a2e}
+.menu-gaveta a.destaque{margin-top:8px;background:#163a2e;color:#fff}
+.menu-gaveta a.destaque svg,.menu-gaveta a.destaque small{color:rgba(255,255,255,.8)}
+body.menu-aberto{overflow:hidden}
+@media (max-width:768px){.menu-btn{display:grid}}
