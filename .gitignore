@@ -1,0 +1,12 @@
+# segredos e configuração local (nunca sobem)
+.env
+.env.*
+.mcp.json
+# cópia do código original do colega (só referência local)
+original-v34/
+# hospedagem antiga (OpenAI)
+.openai/
+# gerados
+dist/server/
+supabase/.temp/
+node_modules/

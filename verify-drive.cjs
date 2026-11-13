@@ -1,0 +1,7 @@
+const assert=require('node:assert/strict'),drive=require('./dist/drive.js');
+const item={id:'cenario-local-preservado',updatedAt:'2026-10-22T14:00:00.000Z',data:{treeId:'TESTE',f:'4',e:'3',c:'3',targetType:'fixo',inspectionReason:'pos-evento',scenarioStage:'apos-controles',reach:'verificado',inspectedAt:'2026-10-22T08:30',followUp:'2026-11-25',evidence:'Ação & evidência\nReavaliação: "chuva"',horizon:'antigo',notes:'antigo',scenarioId:'antigo',previousProtocol:'antigo'}};
+const url=new URL(drive.reviewUrl(item));assert.equal(url.origin,'https://docs.google.com');assert.equal(url.searchParams.get('hl'),'pt-BR');
+for(const [key,value] of Object.entries({f:'F4 — Iminente',e:'E3 — Contínua',c:'C3 — Alta',targetType:'Instalação / estrutura fixa alcançável',inspectionReason:'Após chuva, tempestade ou vento forte',scenarioStage:'Exposição após os controles',reach:'Avaliada e documentada',inspectedAt:'22/10/2026 08:30',evidence:item.data.evidence}))assert.equal(url.searchParams.get(drive.entries[key]),value,key);
+for(const key of ['fReason','eReason','cReason','measures','actionOwner','followUp','horizon','notes','scenarioId','scenarioUpdatedAt','previousProtocol','exclusionEvidence','controlOwner','controlValidity'])assert.equal(drive.entries[key],undefined,key);
+assert.equal(Object.keys(drive.entries).length,16);assert.equal(new Set(Object.values(drive.entries)).size,16);
+console.log('PASS: 16 campos automáticos, inspeção DD/MM/AAAA HH:MM, acentos e quebras de linha; sem campos removidos.');

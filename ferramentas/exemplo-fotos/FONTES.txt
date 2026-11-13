@@ -1,0 +1,12 @@
+arvore-1.jpg  https://commons.wikimedia.org/wiki/File:An_Urban_Tree_-_geograph.org.uk_-_6599947.jpg
+arvore-2.jpg  https://commons.wikimedia.org/wiki/File:Cape_Town_(ZA),_Wale_Street_--_2024_--_3536.jpg
+arvore-3.jpg  https://commons.wikimedia.org/wiki/File:D%C3%BClmen,_Hausd%C3%BClmen,_Heubach_--_2024_--_0016.jpg
+arvore-4.jpg  https://commons.wikimedia.org/wiki/File:D%C3%BClmen,_Leuste,_B%C3%A4ume_im_Nebel_--_2020_--_5042_(bw).jpg
+arvore-5.jpg  https://commons.wikimedia.org/wiki/File:D%C3%BClmen,_Merfeld,_Feldweg_am_M%C3%BChlenbach_--_2021_--_4278-80.jpg
+arvore-6.jpg  https://commons.wikimedia.org/wiki/File:D%C3%BClmen,_Merfeld,_Feldweg_am_M%C3%BChlenbach_--_2021_--_4347-51.jpg
+arvore-7.jpg  https://commons.wikimedia.org/wiki/File:Perth_(AU),_Murray_St,_Tree_--_2019_--_0305.jpg
+arvore-8.jpg  https://commons.wikimedia.org/wiki/File:Photo_of_summer_in_urban_park_on_the_square_Frederiksplein_in_Amsterdam_city;_under_the_big_trees_are_benches_to_relax._Photo_july_2009_by_photographer_Fons_Heijnsbroek_-_free_download.jpg
+arvore-9.jpg  https://commons.wikimedia.org/wiki/File:Sch%C3%B6nwald_im_Schwarzwald,_Escheckstra%C3%9Fe_--_2025_--_0147.jpg
+arvore-10.jpg  https://commons.wikimedia.org/wiki/File:Sun_and_shadows_of_the_urban_trees_on_the_pavement,_in_Sarphatistraat;_free_photo_Amsterdam_city,_Fons_Heijnsbroek_10-2021.jpg
+arvore-11.jpg  https://commons.wikimedia.org/wiki/File:Urban_Tree_(137394833).jpeg
+arvore-12.jpg  https://commons.wikimedia.org/wiki/File:Urban_Tree_Felling_(3)_-_geograph.org.uk_-_3360227.jpg

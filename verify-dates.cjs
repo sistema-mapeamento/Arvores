@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),d=require('./dist/dates.js');
+for(const [input,out] of [['22/10/2026','2026-10-22'],['05/11/2026','2026-11-05'],['2026-10-22T08:30','2026-10-22'],['29/02/2024','2024-02-29'],['29/02/2026',''],['31/11/2026',''],['10/22/2026',''],['20261022','']])assert.equal(d.isoDate(input),out,input);
+assert.equal(d.formatDateTime('2026-10-22T08:30'),'22/10/2026 08:30');
+const c=vm.createContext({});vm.runInContext(fs.readFileSync('./integration/google-forms.gs','utf8'),c);
+for(const value of ['22/10/2026 08:30','2026-10-22T08:30','2026-10-22T11:30:00.000Z'])assert.equal(c.dataHoraArvores(value).toISOString(),'2026-10-22T11:30:00.000Z');
+for(const value of ['31/11/2026 08:30','22/10/2026 25:30','20261022','10/22/2026 08:30'])assert.equal(c.dataHoraArvores(value),'',value);
+assert.equal(c.dataArvores('25/11/2026'),'2026-11-25');assert.equal(c.dataArvores('2026-11-25'),'2026-11-25');
+const html=fs.readFileSync('./dist/index.html','utf8');
+for(const name of ['horizon','notes','exclusionEvidence','controlOwner','controlValidity','scenarioId','scenarioUpdatedAt','previousProtocol'])assert(!new RegExp(`name=["']${name}["']`).test(html),name);
+assert(!html.includes('E0'));assert(!html.includes('value="0"'));assert(html.includes('data-open-calendar'));
+console.log('PASS: datas brasileiras, 24 horas, anos bissextos, rejeição de datas inválidas, compatibilidade ISO e remoção dos campos e da opção E0 no formulário atual.');
