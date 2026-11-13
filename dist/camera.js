@@ -1,13 +1,13 @@
 'use strict';
 // Fotos inteligentes (12/11/2026): botão "Tirar foto" (abre a câmera traseira no celular) e "Da galeria".
-// Cada foto é: virada no sentido certo, reduzida para no máximo 1600 px (fica leve para enviar),
+// Cada foto é: virada no sentido certo, reduzida para no máximo 1280 px (fica leve para enviar),
 // e recebe uma marca d'água com ID da árvore, data/hora e coordenadas.
 // Depois a foto entra no campo original (#treePhotos), e o photos.js continua guardando como antes.
 (function () {
  const form = document.getElementById('assessment');
  const original = document.getElementById('treePhotos');
  if (!form || !original) return;
- const MAX_LADO = 1600, QUALIDADE = 0.82, LIMITE = 5;
+ const MAX_LADO = 1280, QUALIDADE = 0.8, LIMITE = 5;
 
  // monta os dois botões
  const box = document.createElement('div');

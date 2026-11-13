@@ -102,7 +102,7 @@
   const local = iso => { const d = new Date(iso); return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
   const linhas = (await r.json()).map(x => [x.arvore_id, '', x.especie || '', x.componente, x.alvo, TIPO[x.tipo_alvo] || x.tipo_alvo, SIT[x.situacao_controles] || '',
    local(x.inspecionado_em), x.latitude != null ? 'Coordenadas da árvore (latitude, longitude): ' + x.latitude + '; ' + x.longitude : '', 'R' + x.r,
-   (x.fotos || []).map(id => 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w1000').join(';')]);
+   (x.fotos || []).map(id => id.includes('/') ? CFG.supabaseUrl + '/storage/v1/object/public/fotos/' + id.split('/').map(encodeURIComponent).join('/') + '_mini.jpg' : 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w1000').join(';')]);
   return { table: [CAB, ...linhas], exemplo: false };
  }
  function gate(code) {
@@ -272,7 +272,7 @@
  function abrir(fotos, i) { lb = { fotos, i }; mostrarLb(); $('lightbox').showModal(); }
  function mostrarLb() {
   const f = lb.fotos[lb.i];
-  $('lbImg').src = f.url;
+  $('lbImg').src = f.url.replace(/_mini\.jpg$/, '.jpg');   // ampliada: foto inteira
   $('lbInfo').textContent = 'Foto ' + (lb.i + 1) + ' de ' + lb.fotos.length + ' · inspeção de ' + f.data;
   $('lbPrev').hidden = $('lbNext').hidden = lb.fotos.length < 2;
  }
