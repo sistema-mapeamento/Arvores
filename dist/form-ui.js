@@ -66,17 +66,34 @@
 
  // ID da árvore gerado automaticamente (dá para editar se a árvore já tiver placa)
  const id = form.elements.treeId;
+ // 13/11: sequência ARV-00001, ARV-00002... O banco mostra o próximo número livre e confirma na hora de gravar
+ // (se outro celular pegou o mesmo, recebe o seguinte). Sem internet: usa o último número visto + 1.
+ const CFG = window.ARVORES_CONFIG || {}, ULTIMO = 'arvores-proximo-id';
+ const formatar = n => 'ARV-' + String(n).padStart(5, '0');
+ function provisorio() { try { const v = localStorage.getItem(ULTIMO); if (/^ARV-\d{5}$/.test(v || '')) return v; } catch { /* nada */ } return 'ARV-00001'; }
+ let pedido = 0;
  function novoId() {
-  const d = new Date(), p = n => String(n).padStart(2, '0'), alfa = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const r = Array.from(crypto.getRandomValues(new Uint8Array(4)), x => alfa[x % 32]).join('');
-  return 'ARV-' + String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate()) + '-' + r;
+  const meu = ++pedido;
+  form.dataset.idAuto = '1';
+  if (CFG.supabaseUrl) fetch(CFG.supabaseUrl + '/rest/v1/rpc/proximo_id_arvore', { method: 'POST', headers: { apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey, 'Content-Type': 'application/json' }, body: '{}' })
+   .then(r => r.ok ? r.json() : null).then(v => {
+    if (!/^ARV-\d{5}$/.test(v || '')) return;
+    try { localStorage.setItem(ULTIMO, v); } catch { /* nada */ }
+    if (meu === pedido && form.dataset.idAuto === '1') setId(v);
+   }).catch(() => { /* sem internet: fica o provisório */ });
+  return provisorio();
  }
  function setId(v) { id.value = v; id.dispatchEvent(new Event('input', { bubbles: true })); }
+ // número gravado: o próximo provisório passa a ser o seguinte
+ window.addEventListener('arvore-registrada', e => {
+  const m = /^ARV-(\d{5})$/.exec(e.detail?.arvore_id || ''); if (!m) return;
+  try { const atual = /^ARV-(\d{5})$/.exec(localStorage.getItem(ULTIMO) || ''); if (!atual || +atual[1] <= +m[1]) localStorage.setItem(ULTIMO, formatar(+m[1] + 1)); } catch { /* nada */ }
+ });
  const editar = document.createElement('button');
  editar.type = 'button'; editar.className = 'id-edit'; editar.textContent = 'Editar';
- editar.addEventListener('click', () => { id.readOnly = !id.readOnly; editar.textContent = id.readOnly ? 'Editar' : 'Pronto'; if (!id.readOnly) id.select(); });
+ editar.addEventListener('click', () => { id.readOnly = !id.readOnly; if (!id.readOnly) form.dataset.idAuto = ''; editar.textContent = id.readOnly ? 'Editar' : 'Pronto'; if (!id.readOnly) id.select(); });
  const dica = document.createElement('small');
- dica.className = 'id-hint'; dica.textContent = 'Gerado automaticamente. Edite se a árvore já tiver placa.';
+ dica.className = 'id-hint'; dica.textContent = 'Número em sequência (ARV-00001…), confirmado pelo banco ao enviar. Edite só se a árvore já tiver placa.';
  id.readOnly = true;
  id.parentElement.classList.add('id-field');
  id.after(editar);
@@ -87,6 +104,7 @@
  const nova = params.has('nova'), arvore = params.get('arvore');
  if (nova || arvore) {
   document.getElementById('newButton')?.click();
+  if (arvore) form.dataset.idAuto = '';
   setId(arvore ? arvore.slice(0, 100) : novoId());
   for (const n of ['coordinates', 'species']) { form.elements[n].value = ''; form.elements[n].dispatchEvent(new Event('input', { bubbles: true })); }
   if (nova) { form.elements.component.value = ''; form.elements.component.dispatchEvent(new Event('change', { bubbles: true })); }

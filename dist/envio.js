@@ -101,6 +101,9 @@
  async function enviar(item) {
   if (!CFG.supabaseUrl || !CFG.supabaseAnonKey) { aviso('O site está sem banco configurado. A avaliação ficou salva só neste aparelho.'); return; }
   const p = montar(item), qtd = (await fotosDoAparelho(item.id)).length;
+  // ID automático (ARV-00000): o banco confirma ou dá o próximo número livre
+  const f = document.getElementById('assessment');
+  if (f?.dataset.idAuto === '1' && f.elements.treeId?.value.trim() === p.arvore_id) p.id_auto = true;
   aviso('Enviando a avaliação…');
   let res;
   try { res = await rpc('registrar_inspecao', { p }); }
@@ -110,6 +113,12 @@
    aviso(negrito('Sem conexão agora. '), 'A avaliação' + (qtd ? ' e as ' + qtd + ' fotos ficaram guardadas' : ' ficou guardada') + ' neste aparelho e vão sozinhas quando a internet voltar.');
    return;
   }
+  if (res.arvore_id && res.arvore_id !== p.arvore_id) {   // outro celular pegou o número: vale o que o banco deu
+   p.arvore_id = res.arvore_id;
+   if (f?.elements.treeId) { f.elements.treeId.value = res.arvore_id; f.elements.treeId.dispatchEvent(new Event('input', { bubbles: true })); }
+  }
+  window.dispatchEvent(new CustomEvent('arvore-registrada', { detail: { arvore_id: p.arvore_id } }));
+  if (f) f.dataset.idAuto = '';   // a árvore já existe: outro cenário dela no mesmo formulário usa o mesmo número
   const tarefas = Array.from({ length: qtd }, (_, i) => ({ inspecao_id: res.id, arvore_id: p.arvore_id, localId: item.id, n: i + 1 }));
   const { ok, resto } = await processarFotos(tarefas, true);
   if (resto.length) gravar(FILA_FOTOS, ler(FILA_FOTOS).concat(resto));
@@ -117,7 +126,7 @@
   // toda avaliação gera uma ação (SQL 04): no celular abre direto a tela de Ações; no computador fica o link
   const acao = '../acoes/?arvore=' + encodeURIComponent(p.arvore_id) + '&nova=1';
   const irAcao = document.createElement('a'); irAcao.href = acao; irAcao.textContent = 'Abrir a ação gerada';
-  aviso(negrito('Avaliação registrada. '), 'Árvore ' + p.arvore_id + ' · R' + res.r + ' ' + (NOMES[res.r] || '') + '. ',
+  aviso(negrito('Avaliação registrada. '), (p.id_auto ? 'Número da árvore: ' : 'Árvore ') + p.arvore_id + ' · R' + res.r + ' ' + (NOMES[res.r] || '') + '. ',
    qtd ? (ok + ' de ' + qtd + (qtd > 1 ? ' fotos enviadas' : ' foto enviada') + (resto.length ? ' (as outras vão quando a internet melhorar)' : '') + '. ') : '', irAcao, ' · ', ver);
   if (matchMedia('(max-width: 768px)').matches) setTimeout(() => location.assign(acao), 1200);
  }
@@ -134,7 +143,7 @@
     const p = x.p || x;   // formato antigo guardava só a avaliação
     try {
      const res = await rpc('registrar_inspecao', { p }); ok++;
-     for (let n = 1; n <= (x.fotos || 0); n++) novas.push({ inspecao_id: res.id, arvore_id: p.arvore_id, localId: x.localId, n });
+     for (let n = 1; n <= (x.fotos || 0); n++) novas.push({ inspecao_id: res.id, arvore_id: res.arvore_id || p.arvore_id, localId: x.localId, n });
     } catch (e) { if (!e.definitivo) resto.push(x); }
    }
    gravar(FILA, resto);
